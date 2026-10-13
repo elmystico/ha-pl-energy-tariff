@@ -1,0 +1,52 @@
+find_window:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: pl_energy_tariff
+    duration:
+      required: true
+      example: 3
+      selector:
+        number:
+          min: 0.25
+          max: 48
+          step: 0.25
+          unit_of_measurement: h
+          mode: box
+    mode:
+      default: cheapest
+      selector:
+        select:
+          translation_key: mode
+          options:
+            - cheapest
+            - most_expensive
+    period:
+      default: upcoming
+      selector:
+        select:
+          translation_key: period
+          options:
+            - upcoming
+            - today
+            - tomorrow
+    contiguous:
+      default: true
+      selector:
+        boolean:
+    price:
+      default: total
+      selector:
+        select:
+          translation_key: price
+          options:
+            - total
+            - energy
+            - distribution
+    start_after:
+      selector:
+        datetime:
+    end_before:
+      selector:
+        datetime:

@@ -1,0 +1,24 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  zip:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set version in manifest
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          jq --arg v "$VERSION" '.version=$v' custom_components/pl_energy_tariff/manifest.json > m.json
+          mv m.json custom_components/pl_energy_tariff/manifest.json
+      - name: Zip
+        run: cd custom_components/pl_energy_tariff && zip -r ../../pl_energy_tariff.zip .
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: pl_energy_tariff.zip

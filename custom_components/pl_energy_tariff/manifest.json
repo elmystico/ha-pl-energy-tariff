@@ -1,0 +1,13 @@
+{
+  "domain": "pl_energy_tariff",
+  "name": "Taryfy energii PL",
+  "codeowners": ["@elmystico"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/elmystico/ha-pl-energy-tariff",
+  "integration_type": "service",
+  "iot_class": "calculated",
+  "issue_tracker": "https://github.com/elmystico/ha-pl-energy-tariff/issues",
+  "requirements": [],
+  "version": "0.1.0"
+}

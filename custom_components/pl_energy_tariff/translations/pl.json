@@ -1,0 +1,276 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Taryfa energii",
+        "description": "Operator: TAURON Dystrybucja. Wybierz grupę taryfową i sposób rozliczania energii.",
+        "data": {
+          "group": "Grupa taryfowa",
+          "energy_mode": "Cena energii"
+        }
+      },
+      "energy_dynamic": {
+        "title": "Cena dynamiczna",
+        "description": "Cena energii = (cena z encji netto + marża + akcyza) × (1 + VAT). Domyślnie TAURON „Prąd z Ceną Dynamiczną” (SC 0,0892 zł/kWh netto). Encja musi mieć atrybuty `prices_today`/`prices_tomorrow` lub `prices` z listą elementów `time` + `price`, np. `sensor.tge_rdn_fixing_1`.",
+        "data": {
+          "price_entity": "Encja z cenami giełdowymi (RDN / RCE)",
+          "source_includes_vat": "Ceny w encji zawierają VAT",
+          "margin": "Składnik cenotwórczy / marża [zł/kWh netto]",
+          "excise": "Akcyza [zł/kWh] (0 jeśli zawarta w marży)"
+        }
+      },
+      "energy_fixed": {
+        "title": "Cena stała",
+        "description": "Ceny energii netto bez akcyzy. Domyślnie taryfa TAURON Sprzedaż 2026 (decyzja URE z 17.12.2025). Dla G12as i G13s sprzedawca nie publikuje osobnych cen – wpisz ceny ze swojej umowy.",
+        "data": {
+          "energy_afternoon_peak": "Energia – szczyt popołudniowy [zł/kWh netto]",
+          "energy_allday": "Energia – całodobowa [zł/kWh netto]",
+          "energy_day": "Energia – dzienna [zł/kWh netto]",
+          "energy_day_offpeak": "Energia – dzienna pozaszczytowa [zł/kWh netto]",
+          "energy_day_peak": "Energia – dzienna szczytowa [zł/kWh netto]",
+          "energy_morning_peak": "Energia – szczyt przedpołudniowy [zł/kWh netto]",
+          "energy_night": "Energia – nocna [zł/kWh netto]",
+          "energy_offpeak": "Energia – pozaszczytowa [zł/kWh netto]",
+          "energy_other": "Energia – pozostałe godziny [zł/kWh netto]",
+          "energy_peak": "Energia – szczytowa [zł/kWh netto]",
+          "excise": "Akcyza [zł/kWh]",
+          "trade_fee": "Opłata handlowa [zł/mies. netto]"
+        }
+      },
+      "distribution": {
+        "title": "Dystrybucja i opłaty",
+        "description": "Stawki TAURON Dystrybucja dla {group}, netto, ważne od 01.02.2026. Dla G12as stawka nocna 0,0246 dotyczy tylko nadwyżki zużycia nocnego ponad analogiczny okres poprzedniego roku.",
+        "data": {
+          "dist_afternoon_peak": "Dystrybucja – szczyt popołudniowy [zł/kWh netto]",
+          "dist_allday": "Dystrybucja – całodobowa [zł/kWh netto]",
+          "dist_day": "Dystrybucja – dzienna [zł/kWh netto]",
+          "dist_morning_peak": "Dystrybucja – szczyt przedpołudniowy [zł/kWh netto]",
+          "dist_night": "Dystrybucja – nocna [zł/kWh netto]",
+          "dist_offpeak": "Dystrybucja – pozaszczytowa [zł/kWh netto]",
+          "dist_other": "Dystrybucja – pozostałe godziny [zł/kWh netto]",
+          "dist_peak": "Dystrybucja – szczytowa [zł/kWh netto]",
+          "dist_summer_dayoff_day_offpeak": "Dystrybucja – dzienna pozaszczytowa (lato, dzień wolny) [zł/kWh netto]",
+          "dist_summer_dayoff_day_peak": "Dystrybucja – dzienna szczytowa (lato, dzień wolny) [zł/kWh netto]",
+          "dist_summer_dayoff_night": "Dystrybucja – nocna (lato, dzień wolny) [zł/kWh netto]",
+          "dist_summer_workday_day_offpeak": "Dystrybucja – dzienna pozaszczytowa (lato, dzień roboczy) [zł/kWh netto]",
+          "dist_summer_workday_day_peak": "Dystrybucja – dzienna szczytowa (lato, dzień roboczy) [zł/kWh netto]",
+          "dist_summer_workday_night": "Dystrybucja – nocna (lato, dzień roboczy) [zł/kWh netto]",
+          "dist_winter_dayoff_day_offpeak": "Dystrybucja – dzienna pozaszczytowa (zima, dzień wolny) [zł/kWh netto]",
+          "dist_winter_dayoff_day_peak": "Dystrybucja – dzienna szczytowa (zima, dzień wolny) [zł/kWh netto]",
+          "dist_winter_dayoff_night": "Dystrybucja – nocna (zima, dzień wolny) [zł/kWh netto]",
+          "dist_winter_workday_day_offpeak": "Dystrybucja – dzienna pozaszczytowa (zima, dzień roboczy) [zł/kWh netto]",
+          "dist_winter_workday_day_peak": "Dystrybucja – dzienna szczytowa (zima, dzień roboczy) [zł/kWh netto]",
+          "dist_winter_workday_night": "Dystrybucja – nocna (zima, dzień roboczy) [zł/kWh netto]",
+          "quality_fee": "Opłata jakościowa [zł/kWh netto]",
+          "oze_fee": "Opłata OZE [zł/kWh netto]",
+          "cogeneration_fee": "Opłata kogeneracyjna [zł/kWh netto]",
+          "vat": "VAT (ułamek, 0,23 = 23%)",
+          "phases": "Liczba faz przyłącza",
+          "billing_months": "Okres rozliczeniowy [mies.]",
+          "capacity_bracket": "Roczne zużycie (opłata mocowa)"
+        }
+      }
+    },
+    "error": {
+      "entity_not_found": "Nie znaleziono encji.",
+      "unsupported_unit": "Nieobsługiwana jednostka ceny (obsługiwane: zł/MWh, zł/kWh, gr/kWh, PLN/MWh, PLN/kWh).",
+      "no_price_list": "Encja nie ma listy cen w atrybutach (prices_today / prices)."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Cena energii",
+        "data": {
+          "price_entity": "Encja z cenami giełdowymi (RDN / RCE)",
+          "source_includes_vat": "Ceny w encji zawierają VAT",
+          "margin": "Składnik cenotwórczy / marża [zł/kWh netto]",
+          "excise": "Akcyza [zł/kWh]",
+          "energy_afternoon_peak": "Energia – szczyt popołudniowy [zł/kWh netto]",
+          "energy_allday": "Energia – całodobowa [zł/kWh netto]",
+          "energy_day": "Energia – dzienna [zł/kWh netto]",
+          "energy_day_offpeak": "Energia – dzienna pozaszczytowa [zł/kWh netto]",
+          "energy_day_peak": "Energia – dzienna szczytowa [zł/kWh netto]",
+          "energy_morning_peak": "Energia – szczyt przedpołudniowy [zł/kWh netto]",
+          "energy_night": "Energia – nocna [zł/kWh netto]",
+          "energy_offpeak": "Energia – pozaszczytowa [zł/kWh netto]",
+          "energy_other": "Energia – pozostałe godziny [zł/kWh netto]",
+          "energy_peak": "Energia – szczytowa [zł/kWh netto]",
+          "trade_fee": "Opłata handlowa [zł/mies. netto]"
+        }
+      },
+      "distribution": {
+        "title": "Dystrybucja i opłaty",
+        "description": "Stawki TAURON Dystrybucja dla {group}, netto, ważne od 01.02.2026. Dla G12as stawka nocna 0,0246 dotyczy tylko nadwyżki zużycia nocnego ponad analogiczny okres poprzedniego roku.",
+        "data": {
+          "dist_afternoon_peak": "Dystrybucja – szczyt popołudniowy [zł/kWh netto]",
+          "dist_allday": "Dystrybucja – całodobowa [zł/kWh netto]",
+          "dist_day": "Dystrybucja – dzienna [zł/kWh netto]",
+          "dist_morning_peak": "Dystrybucja – szczyt przedpołudniowy [zł/kWh netto]",
+          "dist_night": "Dystrybucja – nocna [zł/kWh netto]",
+          "dist_offpeak": "Dystrybucja – pozaszczytowa [zł/kWh netto]",
+          "dist_other": "Dystrybucja – pozostałe godziny [zł/kWh netto]",
+          "dist_peak": "Dystrybucja – szczytowa [zł/kWh netto]",
+          "dist_summer_dayoff_day_offpeak": "Dystrybucja – dzienna pozaszczytowa (lato, dzień wolny) [zł/kWh netto]",
+          "dist_summer_dayoff_day_peak": "Dystrybucja – dzienna szczytowa (lato, dzień wolny) [zł/kWh netto]",
+          "dist_summer_dayoff_night": "Dystrybucja – nocna (lato, dzień wolny) [zł/kWh netto]",
+          "dist_summer_workday_day_offpeak": "Dystrybucja – dzienna pozaszczytowa (lato, dzień roboczy) [zł/kWh netto]",
+          "dist_summer_workday_day_peak": "Dystrybucja – dzienna szczytowa (lato, dzień roboczy) [zł/kWh netto]",
+          "dist_summer_workday_night": "Dystrybucja – nocna (lato, dzień roboczy) [zł/kWh netto]",
+          "dist_winter_dayoff_day_offpeak": "Dystrybucja – dzienna pozaszczytowa (zima, dzień wolny) [zł/kWh netto]",
+          "dist_winter_dayoff_day_peak": "Dystrybucja – dzienna szczytowa (zima, dzień wolny) [zł/kWh netto]",
+          "dist_winter_dayoff_night": "Dystrybucja – nocna (zima, dzień wolny) [zł/kWh netto]",
+          "dist_winter_workday_day_offpeak": "Dystrybucja – dzienna pozaszczytowa (zima, dzień roboczy) [zł/kWh netto]",
+          "dist_winter_workday_day_peak": "Dystrybucja – dzienna szczytowa (zima, dzień roboczy) [zł/kWh netto]",
+          "dist_winter_workday_night": "Dystrybucja – nocna (zima, dzień roboczy) [zł/kWh netto]",
+          "quality_fee": "Opłata jakościowa [zł/kWh netto]",
+          "oze_fee": "Opłata OZE [zł/kWh netto]",
+          "cogeneration_fee": "Opłata kogeneracyjna [zł/kWh netto]",
+          "vat": "VAT (ułamek, 0,23 = 23%)",
+          "phases": "Liczba faz przyłącza",
+          "billing_months": "Okres rozliczeniowy [mies.]",
+          "capacity_bracket": "Roczne zużycie (opłata mocowa)"
+        }
+      }
+    },
+    "error": {
+      "entity_not_found": "Nie znaleziono encji.",
+      "unsupported_unit": "Nieobsługiwana jednostka ceny (obsługiwane: zł/MWh, zł/kWh, gr/kWh, PLN/MWh, PLN/kWh).",
+      "no_price_list": "Encja nie ma listy cen w atrybutach (prices_today / prices)."
+    }
+  },
+  "selector": {
+    "group": {
+      "options": {
+        "g11": "G11",
+        "g12": "G12",
+        "g12w": "G12w",
+        "g12as": "G12as",
+        "g13": "G13",
+        "g13s": "G13s"
+      }
+    },
+    "energy_mode": {
+      "options": {
+        "dynamic": "dynamiczna (giełda RDN/RCE)",
+        "fixed": "stała (cennik sprzedawcy)"
+      }
+    },
+    "phases": {
+      "options": {
+        "1": "1-fazowe",
+        "3": "3-fazowe"
+      }
+    },
+    "billing": {
+      "options": {
+        "1": "1",
+        "2": "2",
+        "6": "6",
+        "12": "12"
+      }
+    },
+    "capacity": {
+      "options": {
+        "lt500": "poniżej 500 kWh",
+        "500_1200": "500–1200 kWh",
+        "1200_2800": "1200–2800 kWh",
+        "gt2800": "powyżej 2800 kWh"
+      }
+    },
+    "mode": {
+      "options": {
+        "cheapest": "najtańszy",
+        "most_expensive": "najdroższy"
+      }
+    },
+    "period": {
+      "options": {
+        "upcoming": "od teraz",
+        "today": "dziś",
+        "tomorrow": "jutro"
+      }
+    },
+    "price": {
+      "options": {
+        "total": "cena całkowita",
+        "energy": "tylko energia",
+        "distribution": "tylko dystrybucja"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "total_price": {
+        "name": "Cena całkowita"
+      },
+      "energy_price": {
+        "name": "Cena energii"
+      },
+      "distribution_price": {
+        "name": "Cena dystrybucji"
+      },
+      "next_total_price": {
+        "name": "Cena całkowita – następny okres"
+      },
+      "zone": {
+        "name": "Strefa taryfowa",
+        "state": {
+          "afternoon_peak": "szczyt popołudniowy",
+          "allday": "całodobowa",
+          "day": "dzienna",
+          "day_offpeak": "dzienna pozaszczytowa",
+          "day_peak": "dzienna szczytowa",
+          "morning_peak": "szczyt przedpołudniowy",
+          "night": "nocna",
+          "offpeak": "pozaszczytowa",
+          "other": "pozostałe godziny",
+          "peak": "szczytowa"
+        }
+      },
+      "fixed_monthly_cost": {
+        "name": "Opłaty stałe miesięcznie"
+      }
+    }
+  },
+  "services": {
+    "find_window": {
+      "name": "Znajdź okres cenowy",
+      "description": "Zwraca początek i koniec najtańszego (lub najdroższego) okresu o zadanej długości. Użyj z response_variable.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Taryfa",
+          "description": "Wymagane, gdy skonfigurowano kilka taryf."
+        },
+        "duration": {
+          "name": "Długość [h]",
+          "description": "Zaokrąglana w górę do pełnych slotów cenowych."
+        },
+        "mode": {
+          "name": "Tryb",
+          "description": "Najtańszy lub najdroższy."
+        },
+        "period": {
+          "name": "Zakres",
+          "description": "Od teraz (do końca znanych cen), dziś albo jutro."
+        },
+        "contiguous": {
+          "name": "Ciągły",
+          "description": "Wyłączone: N najlepszych godzin w dowolnych miejscach."
+        },
+        "price": {
+          "name": "Cena",
+          "description": "Która cena decyduje."
+        },
+        "start_after": {
+          "name": "Nie wcześniej niż",
+          "description": "Okres nie może zacząć się wcześniej."
+        },
+        "end_before": {
+          "name": "Zakończ przed",
+          "description": "Okres musi się skończyć do tej chwili."
+        }
+      }
+    }
+  }
+}

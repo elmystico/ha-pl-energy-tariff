@@ -1,0 +1,276 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Electricity tariff",
+        "description": "Operator: TAURON Dystrybucja. Choose the tariff group and energy pricing.",
+        "data": {
+          "group": "Tariff group",
+          "energy_mode": "Energy price"
+        }
+      },
+      "energy_dynamic": {
+        "title": "Dynamic price",
+        "description": "Energy price = (entity price net + margin + excise) × (1 + VAT). Defaults: TAURON dynamic price (SC 0.0892 zł/kWh net). The entity must expose `prices_today`/`prices_tomorrow` or `prices` lists of `time` + `price` items, e.g. `sensor.tge_rdn_fixing_1`.",
+        "data": {
+          "price_entity": "Exchange price entity (RDN / RCE)",
+          "source_includes_vat": "Entity prices include VAT",
+          "margin": "Seller margin [zł/kWh net]",
+          "excise": "Excise [zł/kWh] (0 if included in margin)"
+        }
+      },
+      "energy_fixed": {
+        "title": "Fixed price",
+        "description": "Net energy prices excluding excise. Defaults: TAURON Sprzedaż 2026 tariff. For G12as and G13s enter prices from your contract.",
+        "data": {
+          "energy_afternoon_peak": "Energy – afternoon peak [zł/kWh net]",
+          "energy_allday": "Energy – all day [zł/kWh net]",
+          "energy_day": "Energy – day [zł/kWh net]",
+          "energy_day_offpeak": "Energy – day off-peak [zł/kWh net]",
+          "energy_day_peak": "Energy – day peak [zł/kWh net]",
+          "energy_morning_peak": "Energy – morning peak [zł/kWh net]",
+          "energy_night": "Energy – night [zł/kWh net]",
+          "energy_offpeak": "Energy – off-peak [zł/kWh net]",
+          "energy_other": "Energy – other hours [zł/kWh net]",
+          "energy_peak": "Energy – peak [zł/kWh net]",
+          "excise": "Excise [zł/kWh]",
+          "trade_fee": "Trade fee [zł/month net]"
+        }
+      },
+      "distribution": {
+        "title": "Distribution and fees",
+        "description": "TAURON Dystrybucja rates for {group}, net, valid from 2026-02-01.",
+        "data": {
+          "dist_afternoon_peak": "Distribution – afternoon peak [zł/kWh net]",
+          "dist_allday": "Distribution – all day [zł/kWh net]",
+          "dist_day": "Distribution – day [zł/kWh net]",
+          "dist_morning_peak": "Distribution – morning peak [zł/kWh net]",
+          "dist_night": "Distribution – night [zł/kWh net]",
+          "dist_offpeak": "Distribution – off-peak [zł/kWh net]",
+          "dist_other": "Distribution – other hours [zł/kWh net]",
+          "dist_peak": "Distribution – peak [zł/kWh net]",
+          "dist_summer_dayoff_day_offpeak": "Distribution – day off-peak (summer, day off) [zł/kWh net]",
+          "dist_summer_dayoff_day_peak": "Distribution – day peak (summer, day off) [zł/kWh net]",
+          "dist_summer_dayoff_night": "Distribution – night (summer, day off) [zł/kWh net]",
+          "dist_summer_workday_day_offpeak": "Distribution – day off-peak (summer, workday) [zł/kWh net]",
+          "dist_summer_workday_day_peak": "Distribution – day peak (summer, workday) [zł/kWh net]",
+          "dist_summer_workday_night": "Distribution – night (summer, workday) [zł/kWh net]",
+          "dist_winter_dayoff_day_offpeak": "Distribution – day off-peak (winter, day off) [zł/kWh net]",
+          "dist_winter_dayoff_day_peak": "Distribution – day peak (winter, day off) [zł/kWh net]",
+          "dist_winter_dayoff_night": "Distribution – night (winter, day off) [zł/kWh net]",
+          "dist_winter_workday_day_offpeak": "Distribution – day off-peak (winter, workday) [zł/kWh net]",
+          "dist_winter_workday_day_peak": "Distribution – day peak (winter, workday) [zł/kWh net]",
+          "dist_winter_workday_night": "Distribution – night (winter, workday) [zł/kWh net]",
+          "quality_fee": "Quality fee [zł/kWh net]",
+          "oze_fee": "RES (OZE) fee [zł/kWh net]",
+          "cogeneration_fee": "Cogeneration fee [zł/kWh net]",
+          "vat": "VAT (fraction, 0.23 = 23%)",
+          "phases": "Number of phases",
+          "billing_months": "Billing period [months]",
+          "capacity_bracket": "Yearly consumption (capacity fee)"
+        }
+      }
+    },
+    "error": {
+      "entity_not_found": "Entity not found.",
+      "unsupported_unit": "Unsupported unit (zł/MWh, zł/kWh, gr/kWh, PLN/MWh, PLN/kWh).",
+      "no_price_list": "Entity has no price list in its attributes."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Energy price",
+        "data": {
+          "price_entity": "Exchange price entity (RDN / RCE)",
+          "source_includes_vat": "Entity prices include VAT",
+          "margin": "Seller margin [zł/kWh net]",
+          "excise": "Excise [zł/kWh]",
+          "energy_afternoon_peak": "Energy – afternoon peak [zł/kWh net]",
+          "energy_allday": "Energy – all day [zł/kWh net]",
+          "energy_day": "Energy – day [zł/kWh net]",
+          "energy_day_offpeak": "Energy – day off-peak [zł/kWh net]",
+          "energy_day_peak": "Energy – day peak [zł/kWh net]",
+          "energy_morning_peak": "Energy – morning peak [zł/kWh net]",
+          "energy_night": "Energy – night [zł/kWh net]",
+          "energy_offpeak": "Energy – off-peak [zł/kWh net]",
+          "energy_other": "Energy – other hours [zł/kWh net]",
+          "energy_peak": "Energy – peak [zł/kWh net]",
+          "trade_fee": "Trade fee [zł/month net]"
+        }
+      },
+      "distribution": {
+        "title": "Distribution and fees",
+        "description": "TAURON Dystrybucja rates for {group}, net, valid from 2026-02-01.",
+        "data": {
+          "dist_afternoon_peak": "Distribution – afternoon peak [zł/kWh net]",
+          "dist_allday": "Distribution – all day [zł/kWh net]",
+          "dist_day": "Distribution – day [zł/kWh net]",
+          "dist_morning_peak": "Distribution – morning peak [zł/kWh net]",
+          "dist_night": "Distribution – night [zł/kWh net]",
+          "dist_offpeak": "Distribution – off-peak [zł/kWh net]",
+          "dist_other": "Distribution – other hours [zł/kWh net]",
+          "dist_peak": "Distribution – peak [zł/kWh net]",
+          "dist_summer_dayoff_day_offpeak": "Distribution – day off-peak (summer, day off) [zł/kWh net]",
+          "dist_summer_dayoff_day_peak": "Distribution – day peak (summer, day off) [zł/kWh net]",
+          "dist_summer_dayoff_night": "Distribution – night (summer, day off) [zł/kWh net]",
+          "dist_summer_workday_day_offpeak": "Distribution – day off-peak (summer, workday) [zł/kWh net]",
+          "dist_summer_workday_day_peak": "Distribution – day peak (summer, workday) [zł/kWh net]",
+          "dist_summer_workday_night": "Distribution – night (summer, workday) [zł/kWh net]",
+          "dist_winter_dayoff_day_offpeak": "Distribution – day off-peak (winter, day off) [zł/kWh net]",
+          "dist_winter_dayoff_day_peak": "Distribution – day peak (winter, day off) [zł/kWh net]",
+          "dist_winter_dayoff_night": "Distribution – night (winter, day off) [zł/kWh net]",
+          "dist_winter_workday_day_offpeak": "Distribution – day off-peak (winter, workday) [zł/kWh net]",
+          "dist_winter_workday_day_peak": "Distribution – day peak (winter, workday) [zł/kWh net]",
+          "dist_winter_workday_night": "Distribution – night (winter, workday) [zł/kWh net]",
+          "quality_fee": "Quality fee [zł/kWh net]",
+          "oze_fee": "RES (OZE) fee [zł/kWh net]",
+          "cogeneration_fee": "Cogeneration fee [zł/kWh net]",
+          "vat": "VAT (fraction, 0.23 = 23%)",
+          "phases": "Number of phases",
+          "billing_months": "Billing period [months]",
+          "capacity_bracket": "Yearly consumption (capacity fee)"
+        }
+      }
+    },
+    "error": {
+      "entity_not_found": "Entity not found.",
+      "unsupported_unit": "Unsupported unit (zł/MWh, zł/kWh, gr/kWh, PLN/MWh, PLN/kWh).",
+      "no_price_list": "Entity has no price list in its attributes."
+    }
+  },
+  "selector": {
+    "group": {
+      "options": {
+        "g11": "G11",
+        "g12": "G12",
+        "g12w": "G12w",
+        "g12as": "G12as",
+        "g13": "G13",
+        "g13s": "G13s"
+      }
+    },
+    "energy_mode": {
+      "options": {
+        "dynamic": "dynamic (exchange)",
+        "fixed": "fixed (seller tariff)"
+      }
+    },
+    "phases": {
+      "options": {
+        "1": "single-phase",
+        "3": "three-phase"
+      }
+    },
+    "billing": {
+      "options": {
+        "1": "1",
+        "2": "2",
+        "6": "6",
+        "12": "12"
+      }
+    },
+    "capacity": {
+      "options": {
+        "lt500": "below 500 kWh",
+        "500_1200": "500–1200 kWh",
+        "1200_2800": "1200–2800 kWh",
+        "gt2800": "above 2800 kWh"
+      }
+    },
+    "mode": {
+      "options": {
+        "cheapest": "cheapest",
+        "most_expensive": "most expensive"
+      }
+    },
+    "period": {
+      "options": {
+        "upcoming": "from now",
+        "today": "today",
+        "tomorrow": "tomorrow"
+      }
+    },
+    "price": {
+      "options": {
+        "total": "total price",
+        "energy": "energy only",
+        "distribution": "distribution only"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "total_price": {
+        "name": "Total price"
+      },
+      "energy_price": {
+        "name": "Energy price"
+      },
+      "distribution_price": {
+        "name": "Distribution price"
+      },
+      "next_total_price": {
+        "name": "Next total price"
+      },
+      "zone": {
+        "name": "Tariff zone",
+        "state": {
+          "afternoon_peak": "afternoon peak",
+          "allday": "all day",
+          "day": "day",
+          "day_offpeak": "day off-peak",
+          "day_peak": "day peak",
+          "morning_peak": "morning peak",
+          "night": "night",
+          "offpeak": "off-peak",
+          "other": "other hours",
+          "peak": "peak"
+        }
+      },
+      "fixed_monthly_cost": {
+        "name": "Fixed monthly charges"
+      }
+    }
+  },
+  "services": {
+    "find_window": {
+      "name": "Find price window",
+      "description": "Returns start and end of the cheapest (or most expensive) window of the given length. Use with response_variable.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Tariff",
+          "description": "Required when several tariffs are configured."
+        },
+        "duration": {
+          "name": "Duration [h]",
+          "description": "Rounded up to whole price slots."
+        },
+        "mode": {
+          "name": "Mode",
+          "description": "Cheapest or most expensive."
+        },
+        "period": {
+          "name": "Range",
+          "description": "From now, today or tomorrow."
+        },
+        "contiguous": {
+          "name": "Contiguous",
+          "description": "Off: the N best slots anywhere."
+        },
+        "price": {
+          "name": "Price",
+          "description": "Which price to rank."
+        },
+        "start_after": {
+          "name": "Not before",
+          "description": "Window may not start earlier."
+        },
+        "end_before": {
+          "name": "End before",
+          "description": "Window must end by then."
+        }
+      }
+    }
+  }
+}

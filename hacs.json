@@ -1,0 +1,6 @@
+{
+  "name": "Taryfy energii PL (G11–G13, cena dynamiczna)",
+  "homeassistant": "2026.3.0",
+  "render_readme": true,
+  "country": ["PL"]
+}
