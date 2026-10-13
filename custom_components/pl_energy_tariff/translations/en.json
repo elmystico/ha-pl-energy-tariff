@@ -131,6 +131,20 @@
           "billing_months": "Billing period [months]",
           "capacity_bracket": "Yearly consumption (capacity fee)"
         }
+      },
+      "indicators": {
+        "title": "Price indicators",
+        "description": "Reference price = weighted mean of the forecast inertia (τ = forecast length) and the history inertia (τ = period − forecast length). Ranking: cheap/expensive slots in the window starting now.",
+        "data": {
+          "window_hours": "Ranking window [h ahead]",
+          "cheap_fraction": "Share of cheap / expensive slots in the window (0.25 = 1/4)",
+          "extreme_fraction": "Share of very cheap / very expensive (0.1667 = 1/6)",
+          "reference_days": "Reference price period [days]",
+          "charge_very_cheap": "Charge target when very cheap (%)",
+          "charge_cheap": "Charge target at the cheap threshold (%)",
+          "charge_average": "Charge target at the reference price (%)",
+          "charge_expensive": "Charge target just below the expensive threshold (%) (above: 0)"
+        }
       }
     },
     "error": {
@@ -230,6 +244,36 @@
       },
       "fixed_monthly_cost": {
         "name": "Fixed monthly charges"
+      },
+      "reference_price": {
+        "name": "Reference price"
+      },
+      "price_score": {
+        "name": "Price deviation"
+      },
+      "window_median": {
+        "name": "Window median price"
+      },
+      "price_level": {
+        "name": "Price level",
+        "state": {
+          "very_cheap": "very cheap",
+          "cheap": "cheap",
+          "normal": "normal",
+          "expensive": "expensive",
+          "very_expensive": "very expensive"
+        }
+      },
+      "charge_target": {
+        "name": "Charge target"
+      }
+    },
+    "binary_sensor": {
+      "cheap_now": {
+        "name": "Cheap now"
+      },
+      "expensive_now": {
+        "name": "Expensive now"
       }
     }
   },

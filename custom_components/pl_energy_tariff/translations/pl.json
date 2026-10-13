@@ -131,6 +131,20 @@
           "billing_months": "Okres rozliczeniowy [mies.]",
           "capacity_bracket": "Roczne zużycie (opłata mocowa)"
         }
+      },
+      "indicators": {
+        "title": "Wskaźniki ceny",
+        "description": "Cena odniesienia = ważona średnia inercji prognozy (τ = długość prognozy) i inercji historii (τ = okres − długość prognozy). Ranking: tanie/drogie godziny w oknie od teraz.",
+        "data": {
+          "window_hours": "Okno rankingu cen [h do przodu]",
+          "cheap_fraction": "Część tanich / drogich godzin w oknie (0,25 = 1/4)",
+          "extreme_fraction": "Część bardzo tanich / bardzo drogich (0,1667 = 1/6)",
+          "reference_days": "Okres ceny odniesienia [dni]",
+          "charge_very_cheap": "Ładowanie przy bardzo tanim prądzie (%)",
+          "charge_cheap": "Ładowanie na progu taniego (%)",
+          "charge_average": "Ładowanie przy cenie odniesienia (%)",
+          "charge_expensive": "Ładowanie tuż poniżej progu drogiego (%) (powyżej: 0)"
+        }
       }
     },
     "error": {
@@ -230,6 +244,36 @@
       },
       "fixed_monthly_cost": {
         "name": "Opłaty stałe miesięcznie"
+      },
+      "reference_price": {
+        "name": "Cena odniesienia"
+      },
+      "price_score": {
+        "name": "Odchylenie ceny"
+      },
+      "window_median": {
+        "name": "Mediana ceny w oknie"
+      },
+      "price_level": {
+        "name": "Poziom ceny",
+        "state": {
+          "very_cheap": "bardzo tanio",
+          "cheap": "tanio",
+          "normal": "normalnie",
+          "expensive": "drogo",
+          "very_expensive": "bardzo drogo"
+        }
+      },
+      "charge_target": {
+        "name": "Docelowe naładowanie"
+      }
+    },
+    "binary_sensor": {
+      "cheap_now": {
+        "name": "Tani prąd teraz"
+      },
+      "expensive_now": {
+        "name": "Drogi prąd teraz"
       }
     }
   },

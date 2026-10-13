@@ -35,6 +35,7 @@ from .const import (
     DIST_PREFIX,
     DOMAIN,
     ENERGY_PREFIX,
+    INDICATOR_DEFAULTS,
 )
 from .pricing import MODE_DYNAMIC, MODE_FIXED
 from .source import parse_points
@@ -89,6 +90,19 @@ def distribution_schema(group: str, cur: dict[str, Any]) -> vol.Schema:
         vol.Required(CONF_CAPACITY, default=cur.get(CONF_CAPACITY, "1200_2800")): _select(list(T.CAPACITY_FEE), "capacity"),
     })
     return vol.Schema(fields)
+
+
+INDICATOR_RANGES = {
+    "window_hours": (2, 48), "cheap_fraction": (0.05, 0.5), "extreme_fraction": (0.02, 0.5),
+    "reference_days": (1, 60), "charge_very_cheap": (0, 100), "charge_cheap": (0, 100),
+    "charge_average": (0, 100), "charge_expensive": (0, 100),
+}
+
+
+def indicator_schema(cur: dict[str, Any]) -> vol.Schema:
+    return vol.Schema({
+        vol.Required(k, default=cur.get(k, d)): _num(*INDICATOR_RANGES[k]) for k, d in INDICATOR_DEFAULTS.items()
+    })
 
 
 def validate_price_entity(hass: HomeAssistant, entity_id: str, includes_vat: bool) -> str | None:
@@ -182,7 +196,13 @@ class TariffOptionsFlow(OptionsFlow):
     async def async_step_distribution(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         group = self.config_entry.data[CONF_GROUP]
         if user_input is not None:
-            return self.async_create_entry(data={**self.config_entry.options, **self._new, **_clean(user_input)})
+            self._new.update(_clean(user_input))
+            return await self.async_step_indicators()
         return self.async_show_form(step_id="distribution",
                                     data_schema=distribution_schema(group, dict(self.config_entry.options)),
                                     description_placeholders={"group": group})
+
+    async def async_step_indicators(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        if user_input is not None:
+            return self.async_create_entry(data={**self.config_entry.options, **self._new, **user_input})
+        return self.async_show_form(step_id="indicators", data_schema=indicator_schema(dict(self.config_entry.options)))

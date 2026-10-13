@@ -60,6 +60,20 @@ def build(lang):
         "no_price_list": L("Encja nie ma listy cen w atrybutach (prices_today / prices).", "Entity has no price list in its attributes."),
     }
     zone_states = {k: (T.ZONE_NAMES_PL[k] if pl else ZONE_EN[k]) for k in energy_keys}
+    ind = {
+        "window_hours": L("Okno rankingu cen [h do przodu]", "Ranking window [h ahead]"),
+        "cheap_fraction": L("Część tanich / drogich godzin w oknie (0,25 = 1/4)", "Share of cheap / expensive slots in the window (0.25 = 1/4)"),
+        "extreme_fraction": L("Część bardzo tanich / bardzo drogich (0,1667 = 1/6)", "Share of very cheap / very expensive (0.1667 = 1/6)"),
+        "reference_days": L("Okres ceny odniesienia [dni]", "Reference price period [days]"),
+        "charge_very_cheap": L("Ładowanie przy bardzo tanim prądzie (%)", "Charge target when very cheap (%)"),
+        "charge_cheap": L("Ładowanie na progu taniego (%)", "Charge target at the cheap threshold (%)"),
+        "charge_average": L("Ładowanie przy cenie odniesienia (%)", "Charge target at the reference price (%)"),
+        "charge_expensive": L("Ładowanie tuż poniżej progu drogiego (%) (powyżej: 0)", "Charge target just below the expensive threshold (%) (above: 0)"),
+    }
+    ind_desc = L("Cena odniesienia = ważona średnia inercji prognozy (τ = długość prognozy) i inercji historii (τ = okres − długość prognozy). Ranking: tanie/drogie godziny w oknie od teraz.",
+                 "Reference price = weighted mean of the forecast inertia (τ = forecast length) and the history inertia (τ = period − forecast length). Ranking: cheap/expensive slots in the window starting now.")
+    levels = {"very_cheap": L("bardzo tanio", "very cheap"), "cheap": L("tanio", "cheap"), "normal": L("normalnie", "normal"),
+              "expensive": L("drogo", "expensive"), "very_expensive": L("bardzo drogo", "very expensive")}
     return {
         "config": {
             "step": {
@@ -76,6 +90,7 @@ def build(lang):
             "step": {
                 "init": {"title": L("Cena energii", "Energy price"), "data": {**dyn, **fixed}},
                 "distribution": {"title": L("Dystrybucja i opłaty", "Distribution and fees"), "description": dist_desc, "data": {**dist, **common_dist}},
+                "indicators": {"title": L("Wskaźniki ceny", "Price indicators"), "description": ind_desc, "data": ind},
             },
             "error": errors,
         },
@@ -96,6 +111,15 @@ def build(lang):
             "next_total_price": {"name": L("Cena całkowita – następny okres", "Next total price")},
             "zone": {"name": L("Strefa taryfowa", "Tariff zone"), "state": zone_states},
             "fixed_monthly_cost": {"name": L("Opłaty stałe miesięcznie", "Fixed monthly charges")},
+            "reference_price": {"name": L("Cena odniesienia", "Reference price")},
+            "price_score": {"name": L("Odchylenie ceny", "Price deviation")},
+            "window_median": {"name": L("Mediana ceny w oknie", "Window median price")},
+            "price_level": {"name": L("Poziom ceny", "Price level"), "state": levels},
+            "charge_target": {"name": L("Docelowe naładowanie", "Charge target")},
+        },
+        "binary_sensor": {
+            "cheap_now": {"name": L("Tani prąd teraz", "Cheap now")},
+            "expensive_now": {"name": L("Drogi prąd teraz", "Expensive now")},
         }},
         "services": {"find_window": {
             "name": L("Znajdź okres cenowy", "Find price window"),

@@ -29,7 +29,7 @@ from .coordinator import TariffCoordinator
 from .pricing import TZ
 from .windows import MODE_CHEAPEST, MODE_EXPENSIVE, PricePoint, find_window
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 type TariffConfigEntry = ConfigEntry[TariffCoordinator]
@@ -42,6 +42,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: TariffConfigEntry) -> bool:
     coordinator = TariffCoordinator(hass, entry)
+    await coordinator.async_load_history()
     await coordinator.async_refresh()
     entry.runtime_data = coordinator
 

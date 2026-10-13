@@ -165,7 +165,31 @@ async def test_options_change_margin(hass: HomeAssistant, g13_dynamic):
         "dist_morning_peak": 0.2203, "dist_afternoon_peak": 0.3898, "dist_other": 0.0392,
         "quality_fee": 0.0331, "oze_fee": 0.0073, "cogeneration_fee": 0.0030, "vat": 0.23,
         "phases": "1", "billing_months": "1", "capacity_bracket": "1200_2800"})
+    assert r["step_id"] == "indicators"
+    r = await hass.config_entries.options.async_configure(r["flow_id"], {
+        "window_hours": 16, "cheap_fraction": 0.25, "extreme_fraction": 0.1667, "reference_days": 7,
+        "charge_very_cheap": 100, "charge_cheap": 81, "charge_average": 66, "charge_expensive": 20})
     assert r["type"] == "create_entry"
     await _done(hass)
     st = hass.states.get("sensor.taryfa_g13_dynamiczna_energy_price")
     assert float(st.state) == pytest.approx((0.53609 + 0.1 + 0.005) * 1.23, abs=1e-5)
+
+
+async def test_indicator_entities(hass: HomeAssistant, g13_dynamic):
+    ref = hass.states.get("sensor.taryfa_g13_dynamiczna_reference_price")
+    # no recorder in tests: reference = forecast inertia only (11.5 h to the end of today)
+    assert ref.attributes["forecast_hours"] == pytest.approx(11.5)
+    assert ref.attributes["history_inertia"] is not None   # slots seen since midnight
+    assert float(ref.state) > 0
+    med = hass.states.get("sensor.taryfa_g13_dynamiczna_window_median")
+    assert med.attributes["window_hours"] == pytest.approx(11.5)   # only 11.5 h known ahead
+    level = hass.states.get("sensor.taryfa_g13_dynamiczna_price_level").state
+    assert level in ("very_cheap", "cheap", "normal", "expensive", "very_expensive")
+    cheap = hass.states.get("binary_sensor.taryfa_g13_dynamiczna_cheap_now").state
+    exp = hass.states.get("binary_sensor.taryfa_g13_dynamiczna_expensive_now").state
+    assert (cheap == "on") == (level in ("very_cheap", "cheap"))
+    assert (exp == "on") == (level in ("expensive", "very_expensive"))
+    tgt = float(hass.states.get("sensor.taryfa_g13_dynamiczna_charge_target").state)
+    assert 0 <= tgt <= 100
+    assert hass.states.get("sensor.taryfa_g13_dynamiczna_price_score").state not in ("unknown", "unavailable")
+

@@ -61,6 +61,34 @@ Prefiks encji pochodzi z nazwy wpisu, np. `taryfa_g13_dynamiczna`.
 | `sensor.<prefiks>_next_total_price` | cena całkowita w następnym okresie | `start`, `zone` |
 | `sensor.<prefiks>_zone` | strefa taryfowa (`morning_peak`, `other`, …) | `zone_name`, `rate_key` |
 | `sensor.<prefiks>_fixed_monthly_cost` | opłaty stałe [zł/mies. brutto] | rozbicie na składniki |
+| `sensor.<prefiks>_reference_price` | cena odniesienia [zł/kWh] | `forecast_inertia`, `history_inertia`, `forecast_hours`, `tau_*_h`, `sigma` |
+| `sensor.<prefiks>_price_score` | odchylenie ceny od odniesienia [%] | – |
+| `sensor.<prefiks>_window_median` | mediana ceny w oknie (domyślnie 16 h) | progi `very_cheap_max`, `cheap_max`, `expensive_min`, `very_expensive_min` |
+| `sensor.<prefiks>_price_level` | `very_cheap` / `cheap` / `normal` / `expensive` / `very_expensive` | – |
+| `sensor.<prefiks>_charge_target` | docelowe naładowanie baterii [%] | – |
+| `binary_sensor.<prefiks>_cheap_now` / `_expensive_now` | teraz tania / droga część okna | progi |
+
+## Wskaźniki ceny
+
+**Cena odniesienia** (zastępuje „średnią cenę prądu”). Prognoza sięga najwyżej ~35 h, więc
+średnia składa się z dwóch inercji (filtrów pierwszego rzędu):
+
+- inercja prognozy F: średnia cen od teraz do końca prognozy z wagą e^(−t/τf),
+  τf = H = długość pozostałej prognozy;
+- inercja historii P: filtr cen z przeszłości, τh = tydzień − H. Przy starcie liczona
+  z historii recordera (28 dni), potem na bieżąco;
+- R = (τf·F + τh·P) / tydzień.
+
+Tymi samymi wagami liczone jest odchylenie σ, a z niego **odchylenie ceny**
+100·(cena − R)/(σ·R), w tej samej skali co dawna „standaryzowana cena prądu”.
+
+**Okno rankingu**: sloty od bieżącego do 16 h naprzód. 1/4 najtańszych to „tanio”,
+1/6 to „bardzo tanio”, symetrycznie drogo. Gdy do końca prognozy zostało mniej niż 4 h,
+ranking jest niedostępny.
+
+**Docelowe naładowanie** (np. limit ładowania robota): ≤ próg bardzo tani → 100 %,
+próg tani → 81 %, cena odniesienia → 66 %, tuż poniżej progu drogiego → 20 %, drogo → 0 %,
+liniowo pomiędzy. Wszystkie progi i poziomy zmienisz w opcjach integracji.
 
 ## Wykres prognozy cen
 

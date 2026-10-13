@@ -20,6 +20,7 @@ from homeassistant.util import slugify
 from . import tariffs as T
 from .const import DOMAIN
 from .coordinator import TariffCoordinator
+from .indicators import LEVELS
 from .pricing import MODE_DYNAMIC, TZ, PricedSlot, slot_at
 
 UNIT = "zł/kWh"
@@ -35,6 +36,11 @@ async def async_setup_entry(hass: HomeAssistant, entry, async_add_entities: AddE
         NextPriceSensor(coord, entry),
         ZoneSensor(coord, entry),
         FixedCostSensor(coord, entry),
+        ReferencePriceSensor(coord, entry),
+        PriceScoreSensor(coord, entry),
+        WindowMedianSensor(coord, entry),
+        PriceLevelSensor(coord, entry),
+        ChargeTargetSensor(coord, entry),
     ])
 
 
@@ -178,3 +184,120 @@ class FixedCostSensor(TariffEntity, SensorEntity):
         f = dict(self.coordinator.data.fixed)
         f.pop("total", None)
         return f
+
+
+def _iso(d):
+    return d.isoformat() if d else None
+
+
+class IndicatorEntity(TariffEntity, SensorEntity):
+    @property
+    def ind(self):
+        return self.coordinator.data.indicators
+
+
+class ReferencePriceSensor(IndicatorEntity):
+    """Weekly inertia of past prices blended with the inertia of the forecast."""
+
+    _attr_native_unit_of_measurement = UNIT
+    _attr_suggested_display_precision = 4
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_icon = "mdi:scale-balance"
+
+    def __init__(self, coord, entry) -> None:
+        super().__init__(coord, entry, "reference_price")
+
+    @property
+    def native_value(self) -> float | None:
+        r = self.ind.reference
+        return round(r.price, 5) if r else None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        r = self.ind.reference
+        if not r:
+            return {}
+        return {
+            "forecast_inertia": round(r.forecast, 5) if r.forecast is not None else None,
+            "history_inertia": round(r.history, 5) if r.history is not None else None,
+            "forecast_hours": round(r.horizon_h, 2),
+            "tau_forecast_h": round(r.tau_forecast_h, 2),
+            "tau_history_h": round(r.tau_history_h, 2),
+            "sigma": round(r.sigma, 5),
+            "history_samples": self.ind.history_samples,
+            "history_from": _iso(self.ind.history_from),
+        }
+
+
+class PriceScoreSensor(IndicatorEntity):
+    """100 · (price − reference) / (σ · reference)."""
+
+    _attr_native_unit_of_measurement = "%"
+    _attr_suggested_display_precision = 0
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_icon = "mdi:sigma"
+
+    def __init__(self, coord, entry) -> None:
+        super().__init__(coord, entry, "price_score")
+
+    @property
+    def native_value(self) -> float | None:
+        v = self.ind.score
+        return round(v, 1) if v is not None else None
+
+
+class WindowMedianSensor(IndicatorEntity):
+    """Median of the next N hours with cheap / expensive thresholds."""
+
+    _attr_native_unit_of_measurement = UNIT
+    _attr_suggested_display_precision = 4
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_icon = "mdi:chart-bell-curve"
+
+    def __init__(self, coord, entry) -> None:
+        super().__init__(coord, entry, "window_median")
+
+    @property
+    def native_value(self) -> float | None:
+        w = self.ind.window
+        return w.median if w else None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        w = self.ind.window
+        if not w:
+            return {}
+        return {
+            "window_start": _iso(w.start), "window_end": _iso(w.end), "window_hours": w.hours,
+            "very_cheap_max": w.very_cheap_max, "cheap_max": w.cheap_max,
+            "expensive_min": w.expensive_min, "very_expensive_min": w.very_expensive_min,
+        }
+
+
+class PriceLevelSensor(IndicatorEntity):
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = list(LEVELS)
+    _attr_icon = "mdi:stairs"
+
+    def __init__(self, coord, entry) -> None:
+        super().__init__(coord, entry, "price_level")
+
+    @property
+    def native_value(self) -> str | None:
+        return self.ind.level
+
+
+class ChargeTargetSensor(IndicatorEntity):
+    """Suggested battery charge limit for the current price."""
+
+    _attr_native_unit_of_measurement = "%"
+    _attr_suggested_display_precision = 0
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_icon = "mdi:battery-charging-high"
+
+    def __init__(self, coord, entry) -> None:
+        super().__init__(coord, entry, "charge_target")
+
+    @property
+    def native_value(self) -> float | None:
+        return self.ind.charge_target
