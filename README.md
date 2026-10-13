@@ -183,8 +183,7 @@ wykresy działają bez zmian.
 
 ## Wsparcie AI
 
-Kod, testy i dokumentację przygotowano przy wsparciu asystenta AI
-[Claude](https://www.anthropic.com/claude) (Anthropic), pod nadzorem i z weryfikacją
+Kod, testy i dokumentację przygotowano przy wsparciu asystenta AI, pod nadzorem i z weryfikacją
 autora. Stawki sprawdzono w dokumentach źródłowych, a obliczenia porównano z wartościami
 z działającej instalacji Home Assistant.
 
