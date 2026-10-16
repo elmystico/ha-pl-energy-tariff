@@ -3,10 +3,18 @@
     "step": {
       "user": {
         "title": "Electricity tariff",
-        "description": "Operator: TAURON Dystrybucja. Choose the tariff group and energy pricing.",
+        "description": "One entry = one meter. The name sets entity IDs (e.g. 'Home' → `sensor.home_total_price`); empty = 'Taryfa G13 dynamiczna'.",
         "data": {
-          "group": "Tariff group",
+          "name": "Name (optional)",
+          "operator": "Grid operator (DSO)",
           "energy_mode": "Energy price"
+        }
+      },
+      "group": {
+        "title": "Tariff group",
+        "description": "Groups offered by {operator}.",
+        "data": {
+          "group": "Tariff group"
         }
       },
       "energy_dynamic": {
@@ -21,7 +29,7 @@
       },
       "energy_fixed": {
         "title": "Fixed price",
-        "description": "Net energy prices excluding excise. Defaults: TAURON Sprzedaż 2026 tariff. For G12as and G13s enter prices from your contract.",
+        "description": "Net energy prices excluding excise. Defaults: TAURON Sprzedaż 2026 tariff for every operator – enter your contract prices for another seller or for G12as, G12n, G12r, G13s.",
         "data": {
           "energy_afternoon_peak": "Energy – afternoon peak [zł/kWh net]",
           "energy_allday": "Energy – all day [zł/kWh net]",
@@ -39,8 +47,10 @@
       },
       "distribution": {
         "title": "Distribution and fees",
-        "description": "TAURON Dystrybucja rates for {group}, net, valid from 2026-02-01.",
+        "description": "Operator: {operator}, group {group}. {rates_note} Operator and seller names are shown as the device manufacturer.",
         "data": {
+          "operator_name": "Grid operator (DSO) – name",
+          "seller_name": "Energy seller – name",
           "dist_afternoon_peak": "Distribution – afternoon peak [zł/kWh net]",
           "dist_allday": "Distribution – all day [zł/kWh net]",
           "dist_day": "Distribution – day [zł/kWh net]",
@@ -69,12 +79,29 @@
           "billing_months": "Billing period [months]",
           "capacity_bracket": "Yearly consumption (capacity fee)"
         }
+      },
+      "zones": {
+        "title": "Zone hours",
+        "description": "Hours for {group} as `13-15, 22-6` (full hours, a range may wrap midnight). All other hours belong to zone '{default_zone}'. {dayoff} Check the hours in your contract, invoice or on the meter display – some operators (e.g. Enea G12) set them per meter.",
+        "data": {
+          "hours_afternoon_peak": "Hours of zone 'afternoon peak' – winter (Oct–Mar)",
+          "hours_morning_peak": "Hours of zone 'morning peak' – winter (Oct–Mar)",
+          "hours_night": "Hours of zone 'night' – winter (Oct–Mar)",
+          "hours_offpeak": "Hours of zone 'off-peak' – winter (Oct–Mar)",
+          "hours_peak": "Hours of zone 'peak'",
+          "hours_afternoon_peak_summer": "Hours of zone 'afternoon peak' – summer (Apr–Sep)",
+          "hours_morning_peak_summer": "Hours of zone 'morning peak' – summer (Apr–Sep)",
+          "hours_night_summer": "Hours of zone 'night' – summer (Apr–Sep)",
+          "hours_offpeak_summer": "Hours of zone 'off-peak' – summer (Apr–Sep)"
+        }
       }
     },
     "error": {
       "entity_not_found": "Entity not found.",
       "unsupported_unit": "Unsupported unit (zł/MWh, zł/kWh, gr/kWh, PLN/MWh, PLN/kWh).",
-      "no_price_list": "Entity has no price list in its attributes."
+      "no_price_list": "Entity has no price list in its attributes.",
+      "invalid_hours": "Invalid hours – use e.g. `13-15, 22-6`.",
+      "empty_hours": "Enter at least one hour range."
     }
   },
   "options": {
@@ -101,8 +128,10 @@
       },
       "distribution": {
         "title": "Distribution and fees",
-        "description": "TAURON Dystrybucja rates for {group}, net, valid from 2026-02-01.",
+        "description": "Operator: {operator}, group {group}. {rates_note} Operator and seller names are shown as the device manufacturer.",
         "data": {
+          "operator_name": "Grid operator (DSO) – name",
+          "seller_name": "Energy seller – name",
           "dist_afternoon_peak": "Distribution – afternoon peak [zł/kWh net]",
           "dist_allday": "Distribution – all day [zł/kWh net]",
           "dist_day": "Distribution – day [zł/kWh net]",
@@ -132,6 +161,21 @@
           "capacity_bracket": "Yearly consumption (capacity fee)"
         }
       },
+      "zones": {
+        "title": "Zone hours",
+        "description": "Hours for {group} as `13-15, 22-6` (full hours, a range may wrap midnight). All other hours belong to zone '{default_zone}'. {dayoff} Check the hours in your contract, invoice or on the meter display – some operators (e.g. Enea G12) set them per meter.",
+        "data": {
+          "hours_afternoon_peak": "Hours of zone 'afternoon peak' – winter (Oct–Mar)",
+          "hours_morning_peak": "Hours of zone 'morning peak' – winter (Oct–Mar)",
+          "hours_night": "Hours of zone 'night' – winter (Oct–Mar)",
+          "hours_offpeak": "Hours of zone 'off-peak' – winter (Oct–Mar)",
+          "hours_peak": "Hours of zone 'peak'",
+          "hours_afternoon_peak_summer": "Hours of zone 'afternoon peak' – summer (Apr–Sep)",
+          "hours_morning_peak_summer": "Hours of zone 'morning peak' – summer (Apr–Sep)",
+          "hours_night_summer": "Hours of zone 'night' – summer (Apr–Sep)",
+          "hours_offpeak_summer": "Hours of zone 'off-peak' – summer (Apr–Sep)"
+        }
+      },
       "indicators": {
         "title": "Price indicators",
         "description": "Reference price = weighted mean of the forecast inertia (τ = forecast length) and the history inertia (τ = period − forecast length). Ranking: cheap/expensive slots in the window starting now.",
@@ -150,7 +194,9 @@
     "error": {
       "entity_not_found": "Entity not found.",
       "unsupported_unit": "Unsupported unit (zł/MWh, zł/kWh, gr/kWh, PLN/MWh, PLN/kWh).",
-      "no_price_list": "Entity has no price list in its attributes."
+      "no_price_list": "Entity has no price list in its attributes.",
+      "invalid_hours": "Invalid hours – use e.g. `13-15, 22-6`.",
+      "empty_hours": "Enter at least one hour range."
     }
   },
   "selector": {
@@ -161,7 +207,19 @@
         "g12w": "G12w",
         "g12as": "G12as",
         "g13": "G13",
-        "g13s": "G13s"
+        "g13s": "G13s",
+        "g12r": "G12r",
+        "g12n": "G12n"
+      }
+    },
+    "operator": {
+      "options": {
+        "tauron": "TAURON Dystrybucja",
+        "enea": "ENEA Operator",
+        "energa": "Energa-Operator",
+        "pge": "PGE Dystrybucja",
+        "stoen": "Stoen Operator",
+        "other": "other (own rates)"
       }
     },
     "energy_mode": {

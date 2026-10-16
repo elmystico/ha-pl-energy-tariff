@@ -34,11 +34,14 @@ from .const import (
     CONF_FIXED_NETWORK,
     CONF_GROUP,
     CONF_MARGIN,
+    CONF_OPERATOR,
+    CONF_OPERATOR_NAME,
     CONF_OZE,
     CONF_PHASES,
     CONF_PRICE_ENTITY,
     CONF_QUALITY,
     CONF_REFERENCE_DAYS,
+    CONF_SELLER_NAME,
     CONF_SOURCE_VAT,
     CONF_TRADE_FEE,
     CONF_VAT,
@@ -77,13 +80,23 @@ _LOGGER = logging.getLogger(__name__)
 def config_from_entry(entry: ConfigEntry) -> TariffConfig:
     group = entry.data[CONF_GROUP]
     mode = entry.data[CONF_ENERGY_MODE]
+    op = entry.data.get(CONF_OPERATOR, T.DEFAULT_OPERATOR)
     o = entry.options
-    base = TariffConfig.defaults(group, mode)
-    g = T.GROUPS[group]
+    base = TariffConfig.defaults(group, mode, op)
+    g = T.group(op, group)
     fn = o.get(CONF_FIXED_NETWORK)
+    try:
+        schedule = T.schedule_from_options(g.schedule, dict(o))
+    except ValueError as err:
+        _LOGGER.warning("Tariff %s: invalid zone hours (%s), using defaults", entry.title, err)
+        schedule = g.schedule
     return TariffConfig(
         group=group,
         energy_mode=mode,
+        operator=op,
+        schedule=schedule,
+        operator_name=o.get(CONF_OPERATOR_NAME),
+        seller_name=o.get(CONF_SELLER_NAME),
         dist_rates={k: float(o.get(DIST_PREFIX + k, v)) for k, v in g.dist_rates.items()},
         energy_rates={k: float(o.get(ENERGY_PREFIX + k, v)) for k, v in g.energy_rates.items()},
         margin=float(o.get(CONF_MARGIN, base.margin)),

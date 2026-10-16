@@ -10,8 +10,35 @@ najtańsze 3 godziny to 21:00–24:00.
 
 ## Obsługiwane taryfy
 
-Operator: **TAURON Dystrybucja**, grupy **G11, G12, G12w, G12as, G13, G13s**.
-Każdą stawkę można zmienić w opcjach integracji.
+| Operator (OSD) | Grupy | Domyślne stawki |
+|---|---|---|
+| TAURON Dystrybucja | G11, G12, G12w, G12as, G13, G13s | taryfa 2026, sprawdzone |
+| ENEA Operator | G11, G12, G12w, G12as | taryfa 2026, sprawdzone |
+| Energa-Operator | G11, G12, G12w, G12r, G12as | taryfa 2026, sprawdzone |
+| PGE Dystrybucja | G11, G12, G12w, G12n, G12as | **orientacyjne**, porównaj z fakturą |
+| Stoen Operator | G11, G12, G12w, G12as | **orientacyjne**, porównaj z fakturą |
+| inny | G11, G12, G12w, G12as, G13 | stawki TAURON, wpisz własne |
+
+Każdą stawkę, **godziny każdej strefy** oraz nazwy operatora i sprzedawcy można zmienić
+w opcjach integracji. Godziny wpisuje się jako `13-15, 22-6`; dla grup z podziałem na
+lato i zimę osobno dla obu okresów.
+
+Domyślne godziny stref:
+
+| Operator · grupa | Strefy (czas lokalny) |
+|---|---|
+| PGE G12 | nocna: zima 13–15, 22–6 · lato 15–17, 22–6 |
+| PGE G12w | jak PGE G12 w dni robocze, weekendy i święta całą dobę w strefie pozaszczytowej |
+| PGE G12n | nocna 1–5 · niedziele i święta całą dobę (sobota jak dzień roboczy) |
+| Enea G12 | nocna 13–15, 22–6 (Enea ustala godziny indywidualnie: 8 h z 22–7 i 2 h z 13–17 – sprawdź na liczniku) |
+| Enea G12w | szczytowa pn–pt 6–21 |
+| Energa G12, G12w | nocna 13–15, 22–6 (G12w: weekendy i święta całą dobę) |
+| Energa G12r | pozaszczytowa 13–16, 22–7 |
+| Stoen G12 | nocna 13–15, 22–6 |
+| Stoen G12w | szczytowa pn–pt 6–22 |
+| G12as (wszyscy) | nocna 22–6 |
+
+TAURON:
 
 | Grupa | Strefy (czas lokalny) |
 |---|---|
@@ -45,13 +72,27 @@ sensorze miesięcznym. Nie wpływają na to, która godzina jest tańsza.
 1. HACS → ⋮ → *Custom repositories* → `https://github.com/elmystico/ha-pl-energy-tariff`,
    kategoria **Integration**. Zainstaluj, zrestartuj HA.
 2. Ustawienia → Urządzenia i usługi → Dodaj integrację → **Taryfy energii PL**.
-3. Wybierz grupę i rodzaj ceny energii. Sprawdź podpowiedziane stawki.
+3. Podaj nazwę (opcjonalnie), operatora i rodzaj ceny energii, potem grupę. Sprawdź
+   podpowiedziane stawki i godziny stref.
 
-Możesz dodać kilka taryf naraz, np. G13 dynamiczną i G11 stałą, i porównywać je na wykresie.
+### Kilka liczników, kilka taryf
+
+Jeden wpis integracji odpowiada jednemu licznikowi. Wpisów może być dowolnie wiele, każdy
+z innym operatorem, grupą, źródłem ceny i stawkami, np. „Dom” (TAURON G13 dynamiczna)
+i „Garaż” (PGE G12 stała). Wpisy liczą się niezależnie, łącznie z ceną odniesienia
+i wskaźnikami.
+
+- **Panel Energia:** przy każdym liczniku wybierz *Użyj encji z aktualną ceną* i wskaż
+  `sensor.<prefiks>_total_price` jego wpisu.
+- **Akcja `find_window`:** przy kilku wpisach podaj `config_entry_id`.
+
+Kilka wpisów przydaje się też do porównania taryf na tym samym zużyciu.
 
 ## Encje
 
-Prefiks encji pochodzi z nazwy wpisu, np. `taryfa_g13_dynamiczna`.
+Prefiks encji pochodzi z nazwy podanej przy dodawaniu wpisu („Dom” → `dom`), a bez nazwy
+z automatycznej, np. `taryfa_g13_dynamiczna`. Późniejsza zmiana nazwy wpisu nie zmienia
+identyfikatorów encji. Dwa wpisy o tej samej nazwie dostaną końcówkę `_2`.
 
 | Encja | Stan | Atrybuty |
 |---|---|---|
@@ -59,7 +100,7 @@ Prefiks encji pochodzi z nazwy wpisu, np. `taryfa_g13_dynamiczna`.
 | `sensor.<prefiks>_energy_price` | część za energię [zł/kWh brutto] | listy jak wyżej |
 | `sensor.<prefiks>_distribution_price` | część za dystrybucję [zł/kWh brutto] | listy jak wyżej |
 | `sensor.<prefiks>_next_total_price` | cena całkowita w następnym okresie | `start`, `zone` |
-| `sensor.<prefiks>_zone` | strefa taryfowa (`morning_peak`, `other`, …) | `zone_name`, `rate_key` |
+| `sensor.<prefiks>_zone` | strefa taryfowa (`morning_peak`, `other`, …) | `zone_name`, `rate_key`, `group`, `operator` |
 | `sensor.<prefiks>_fixed_monthly_cost` | opłaty stałe [zł/mies. brutto] | rozbicie na składniki |
 | `sensor.<prefiks>_reference_price` | cena odniesienia [zł/kWh] | `forecast_inertia`, `history_inertia`, `forecast_hours`, `tau_*_h`, `sigma` |
 | `sensor.<prefiks>_price_score` | odchylenie ceny od odniesienia [%] | – |
@@ -186,18 +227,30 @@ actions:
 
 - Dystrybucja: [Wyciąg z Taryfy TAURON Dystrybucja S.A. na rok 2026 dla grup G](https://www.tauron-dystrybucja.pl/-/media/offer-documents/dystrybucja/aktualna-taryfa/wyciag-z-taryfy-td-sa-na-rok-2026-dla-odbiorcow-grup-g.ashx),
   stawki od 01.02.2026. Sprawdzone ze [stawkami brutto](https://www.tauron-dystrybucja.pl/-/media/offer-documents/dystrybucja/aktualna-taryfa/stawki-brutto-w-grupach-g-na-rok-2026.ashx).
-- Energia, cena stała: [decyzja Prezesa URE z 17.12.2025, taryfa TAURON Sprzedaż](https://bip.ure.gov.pl/download/3/20340/TauronSprzedaz.pdf), 01.01–31.12.2026.
+- ENEA Operator: wyciąg z taryfy na 2026 r. (01.01–31.12.2026), opłata jakościowa
+  0,0332 od 01.02.2026.
+- Energa-Operator: wyciąg z taryfy na 2026 r. (aktualizacja 01.02.2026).
+- PGE Dystrybucja, Stoen Operator: godziny stref z taryf na 2026 r.; stawki ze źródeł
+  pośrednich, **niesprawdzone** z taryfą.
+- Energia, cena stała (domyślnie dla każdego operatora): [decyzja Prezesa URE z 17.12.2025, taryfa TAURON Sprzedaż](https://bip.ure.gov.pl/download/3/20340/TauronSprzedaz.pdf), 01.01–31.12.2026.
 - Energia, cena dynamiczna: [Cennik „Prąd z Ceną Dynamiczną”](https://www.tauron.pl/-/media/offer-documents/produkty/2024/08-2024/dynamiczne/ts/EE-GD-CDzcb-Bezpieczny-TS-0.ashx), od 01.04.2026.
 
 ## Ograniczenia
 
 - **G12as:** stawka nocna 0,0246 zł/kWh dotyczy tylko nadwyżki zużycia nocnego ponad
   analogiczny okres poprzedniego roku. Domyślnie przyjęta jest stawka podstawowa 0,2464.
-- **G12as, G13s, cena stała:** sprzedawca nie publikuje dla nich osobnych cen energii.
-  Domyślnie wstawiona jest cena G11, wpisz ceny ze swojej umowy.
+- **G12as (Enea 0,0246, Energa 0,0337):** jak wyżej, stawka nocna tylko dla nadwyżki.
+- **Ceny energii przy cenie stałej** są domyślnie z taryfy TAURON Sprzedaż niezależnie od
+  operatora. Przy innym sprzedawcy oraz dla G12as, G12n, G12r i G13s wpisz ceny z umowy.
+- **PGE i Stoen:** domyślne stawki dystrybucji są orientacyjne; dla PGE G12w i G12n
+  przyjęto stawki G12. Porównaj z fakturą.
+- **Energa – abonament** przy zdalnym odczycie jest niższy (0,74 / 0,70 zł netto) niż
+  domyślny; okresy 6 i 12 mies. nie występują w taryfie.
+- **Enea G12sezON, G13active, Stoen G12eko, PGE G12e:** nieobsługiwane (strefy zależne
+  od miesiąca lub publikowane osobno).
 - **Akcyza przy cenie dynamicznej:** cennik TAURON jej nie wymienia, domyślnie 0.
   Sprawdź na fakturze.
-- **G14dynamic** (strefy z Energetycznego Kompasu PSE) i inni operatorzy: planowane.
+- **G14dynamic** (strefy z Energetycznego Kompasu PSE): planowane.
 - Próg 0,005 zł/kWh netto z cennika dynamicznego dotyczy średniej w okresie
   rozliczeniowym, nie pojedynczej godziny, więc nie jest stosowany do cen godzinowych.
 
@@ -217,4 +270,4 @@ z działającej instalacji Home Assistant.
 
 ## Licencja
 
-MIT. Integracja nie jest powiązana z TAURON Polska Energia S.A.
+MIT. Integracja nie jest powiązana z żadnym operatorem ani sprzedawcą energii.

@@ -8,6 +8,10 @@ DOMAIN: Final = "pl_energy_tariff"
 NAME: Final = "Taryfy energii PL"
 
 CONF_GROUP: Final = "group"
+CONF_OPERATOR: Final = "operator"
+CONF_TITLE: Final = "name"
+CONF_OPERATOR_NAME: Final = "operator_name"
+CONF_SELLER_NAME: Final = "seller_name"
 CONF_ENERGY_MODE: Final = "energy_mode"
 CONF_PRICE_ENTITY: Final = "price_entity"
 CONF_SOURCE_VAT: Final = "source_includes_vat"
@@ -45,6 +49,8 @@ HISTORY_LOOKBACK_DAYS: Final = 28
 
 DIST_PREFIX: Final = "dist_"
 ENERGY_PREFIX: Final = "energy_"
+HOURS_PREFIX: Final = "hours_"
+SUMMER_SUFFIX: Final = "_summer"
 
 DEFAULT_PRICE_ENTITY: Final = "sensor.tge_rdn_fixing_1"
 

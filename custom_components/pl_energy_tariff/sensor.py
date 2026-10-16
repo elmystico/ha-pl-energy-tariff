@@ -56,7 +56,7 @@ class TariffEntity(CoordinatorEntity[TariffCoordinator]):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             name=entry.title,
-            manufacturer="TAURON Dystrybucja / TAURON Sprzedaż",
+            manufacturer=cfg.manufacturer,
             model=f"{cfg.group} · {'cena dynamiczna' if cfg.energy_mode == MODE_DYNAMIC else 'cena stała'}",
             entry_type=DeviceEntryType.SERVICE,
         )
@@ -151,19 +151,19 @@ class ZoneSensor(TariffEntity, SensorEntity):
 
     def __init__(self, coord, entry) -> None:
         super().__init__(coord, entry, "zone")
-        self._attr_options = list(T.GROUPS[coord.cfg.group].energy_zones)
+        self._attr_options = list(coord.cfg.tariff.energy_zones)
 
     @property
     def native_value(self) -> str | None:
         local = self.now()
-        return self.coordinator.cfg.tariff.classify(local)[0]
+        return self.coordinator.cfg.classify(local)[0]
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         local = self.now()
-        zone, rate_key = self.coordinator.cfg.tariff.classify(local)
+        zone, rate_key = self.coordinator.cfg.classify(local)
         return {"zone_name": T.ZONE_NAMES_PL.get(zone, zone), "rate_key": rate_key,
-                "group": self.coordinator.cfg.group}
+                "group": self.coordinator.cfg.group, "operator": self.coordinator.cfg.operator}
 
 
 class FixedCostSensor(TariffEntity, SensorEntity):

@@ -20,14 +20,31 @@ def rate_label(key, lang):
         return f"{zn} ({SEASON[s][i]}, {DAYT[d][i]})"
     return T.ZONE_NAMES_PL[key] if lang == "pl" else ZONE_EN[key]
 
-dist_keys = sorted({k for g in T.GROUPS.values() for k in g.dist_rates})
-energy_keys = sorted({k for g in T.GROUPS.values() for k in g.energy_zones})
+ALL = [g for o in T.OPERATORS.values() for g in o.groups.values()]
+dist_keys = sorted({k for g in ALL for k in g.dist_rates})
+energy_keys = sorted({k for g in ALL for k in g.energy_zones})
+hour_zones = sorted({z for g in ALL if g.schedule for z in g.schedule.winter})
+seasonal_zones = sorted({z for g in ALL if g.schedule and g.schedule.summer is not None for z in g.schedule.winter})
 
 def build(lang):
     pl = lang == "pl"
     L = (lambda p, e: p if pl else e)
     dist = {f"dist_{k}": L(f"Dystrybucja – {rate_label(k,'pl')} [zł/kWh netto]", f"Distribution – {rate_label(k,'en')} [zł/kWh net]") for k in dist_keys}
     energy = {f"energy_{k}": L(f"Energia – {rate_label(k,'pl')} [zł/kWh netto]", f"Energy – {rate_label(k,'en')} [zł/kWh net]") for k in energy_keys}
+    names = {
+        "operator_name": L("Operator sieci (OSD) – nazwa", "Grid operator (DSO) – name"),
+        "seller_name": L("Sprzedawca energii – nazwa", "Energy seller – name"),
+    }
+    hours = {}
+    for z in hour_zones:
+        zn = rate_label(z, lang)
+        hours[f"hours_{z}"] = L(f"Godziny strefy „{zn}”", f"Hours of zone '{zn}'")
+    for z in seasonal_zones:
+        zn = rate_label(z, lang)
+        hours[f"hours_{z}"] = L(f"Godziny strefy „{zn}” – zima (1.10–31.03)", f"Hours of zone '{zn}' – winter (Oct–Mar)")
+        hours[f"hours_{z}_summer"] = L(f"Godziny strefy „{zn}” – lato (1.04–30.09)", f"Hours of zone '{zn}' – summer (Apr–Sep)")
+    zones_desc = L("Godziny dla {group} w formacie `13-15, 22-6` (pełne godziny, zakres może przechodzić przez północ). Pozostałe godziny należą do strefy „{default_zone}”. {dayoff} Sprawdź godziny w umowie, na fakturze lub na wyświetlaczu licznika – u części operatorów (np. Enea G12) ustala je operator indywidualnie.",
+                   "Hours for {group} as `13-15, 22-6` (full hours, a range may wrap midnight). All other hours belong to zone '{default_zone}'. {dayoff} Check the hours in your contract, invoice or on the meter display – some operators (e.g. Enea G12) set them per meter.")
     common_dist = {
         "quality_fee": L("Opłata jakościowa [zł/kWh netto]", "Quality fee [zł/kWh net]"),
         "oze_fee": L("Opłata OZE [zł/kWh netto]", "RES (OZE) fee [zł/kWh net]"),
@@ -50,14 +67,16 @@ def build(lang):
     })
     dyn_desc = L("Cena energii = (cena z encji netto + marża + akcyza) × (1 + VAT). Domyślnie TAURON „Prąd z Ceną Dynamiczną” (SC 0,0892 zł/kWh netto). Encja musi mieć atrybuty `prices_today`/`prices_tomorrow` lub `prices` z listą elementów `time` + `price`, np. `sensor.tge_rdn_fixing_1`.",
                  "Energy price = (entity price net + margin + excise) × (1 + VAT). Defaults: TAURON dynamic price (SC 0.0892 zł/kWh net). The entity must expose `prices_today`/`prices_tomorrow` or `prices` lists of `time` + `price` items, e.g. `sensor.tge_rdn_fixing_1`.")
-    fixed_desc = L("Ceny energii netto bez akcyzy. Domyślnie taryfa TAURON Sprzedaż 2026 (decyzja URE z 17.12.2025). Dla G12as i G13s sprzedawca nie publikuje osobnych cen – wpisz ceny ze swojej umowy.",
-                   "Net energy prices excluding excise. Defaults: TAURON Sprzedaż 2026 tariff. For G12as and G13s enter prices from your contract.")
-    dist_desc = L("Stawki TAURON Dystrybucja dla {group}, netto, ważne od 01.02.2026. Dla G12as stawka nocna 0,0246 dotyczy tylko nadwyżki zużycia nocnego ponad analogiczny okres poprzedniego roku.",
-                  "TAURON Dystrybucja rates for {group}, net, valid from 2026-02-01.")
+    fixed_desc = L("Ceny energii netto bez akcyzy. Domyślnie taryfa TAURON Sprzedaż 2026 (decyzja URE z 17.12.2025), niezależnie od operatora – wpisz ceny ze swojej umowy, jeśli masz innego sprzedawcę lub grupę G12as, G12n, G12r albo G13s.",
+                   "Net energy prices excluding excise. Defaults: TAURON Sprzedaż 2026 tariff for every operator – enter your contract prices for another seller or for G12as, G12n, G12r, G13s.")
+    dist_desc = L("Operator: {operator}, grupa {group}. {rates_note} Nazwy operatora i sprzedawcy są widoczne jako producent urządzenia.",
+                  "Operator: {operator}, group {group}. {rates_note} Operator and seller names are shown as the device manufacturer.")
     errors = {
         "entity_not_found": L("Nie znaleziono encji.", "Entity not found."),
         "unsupported_unit": L("Nieobsługiwana jednostka ceny (obsługiwane: zł/MWh, zł/kWh, gr/kWh, PLN/MWh, PLN/kWh).", "Unsupported unit (zł/MWh, zł/kWh, gr/kWh, PLN/MWh, PLN/kWh)."),
         "no_price_list": L("Encja nie ma listy cen w atrybutach (prices_today / prices).", "Entity has no price list in its attributes."),
+        "invalid_hours": L("Niepoprawny zapis godzin – użyj np. `13-15, 22-6`.", "Invalid hours – use e.g. `13-15, 22-6`."),
+        "empty_hours": L("Podaj co najmniej jeden zakres godzin.", "Enter at least one hour range."),
     }
     zone_states = {k: (T.ZONE_NAMES_PL[k] if pl else ZONE_EN[k]) for k in energy_keys}
     ind = {
@@ -78,24 +97,33 @@ def build(lang):
         "config": {
             "step": {
                 "user": {"title": L("Taryfa energii", "Electricity tariff"),
-                         "description": L("Operator: TAURON Dystrybucja. Wybierz grupę taryfową i sposób rozliczania energii.", "Operator: TAURON Dystrybucja. Choose the tariff group and energy pricing."),
-                         "data": {"group": L("Grupa taryfowa", "Tariff group"), "energy_mode": L("Cena energii", "Energy price")}},
+                         "description": L("Jeden wpis = jeden licznik. Nazwa wyznacza identyfikatory encji (np. „Dom” → `sensor.dom_total_price`); pusta = „Taryfa G13 dynamiczna”.",
+                                          "One entry = one meter. The name sets entity IDs (e.g. 'Home' → `sensor.home_total_price`); empty = 'Taryfa G13 dynamiczna'."),
+                         "data": {"name": L("Nazwa (opcjonalnie)", "Name (optional)"), "operator": L("Operator sieci (OSD)", "Grid operator (DSO)"),
+                                  "energy_mode": L("Cena energii", "Energy price")}},
+                "group": {"title": L("Grupa taryfowa", "Tariff group"),
+                          "description": L("Grupy dostępne u operatora {operator}.", "Groups offered by {operator}."),
+                          "data": {"group": L("Grupa taryfowa", "Tariff group")}},
                 "energy_dynamic": {"title": L("Cena dynamiczna", "Dynamic price"), "description": dyn_desc, "data": dyn},
                 "energy_fixed": {"title": L("Cena stała", "Fixed price"), "description": fixed_desc, "data": fixed},
-                "distribution": {"title": L("Dystrybucja i opłaty", "Distribution and fees"), "description": dist_desc, "data": {**dist, **common_dist}},
+                "distribution": {"title": L("Dystrybucja i opłaty", "Distribution and fees"), "description": dist_desc, "data": {**names, **dist, **common_dist}},
+                "zones": {"title": L("Godziny stref", "Zone hours"), "description": zones_desc, "data": hours},
             },
             "error": errors,
         },
         "options": {
             "step": {
                 "init": {"title": L("Cena energii", "Energy price"), "data": {**dyn, **fixed}},
-                "distribution": {"title": L("Dystrybucja i opłaty", "Distribution and fees"), "description": dist_desc, "data": {**dist, **common_dist}},
+                "distribution": {"title": L("Dystrybucja i opłaty", "Distribution and fees"), "description": dist_desc, "data": {**names, **dist, **common_dist}},
+                "zones": {"title": L("Godziny stref", "Zone hours"), "description": zones_desc, "data": hours},
                 "indicators": {"title": L("Wskaźniki ceny", "Price indicators"), "description": ind_desc, "data": ind},
             },
             "error": errors,
         },
         "selector": {
-            "group": {"options": {k.lower(): k for k in T.GROUPS}},
+            "group": {"options": {k.lower(): k for k in T.ALL_GROUP_KEYS}},
+            "operator": {"options": {"tauron": "TAURON Dystrybucja", "enea": "ENEA Operator", "energa": "Energa-Operator",
+                                     "pge": "PGE Dystrybucja", "stoen": "Stoen Operator", "other": L("inny (własne stawki)", "other (own rates)")}},
             "energy_mode": {"options": {"dynamic": L("dynamiczna (giełda RDN/RCE)", "dynamic (exchange)"), "fixed": L("stała (cennik sprzedawcy)", "fixed (seller tariff)")}},
             "phases": {"options": {"1": L("1-fazowe", "single-phase"), "3": L("3-fazowe", "three-phase")}},
             "billing": {"options": {"1": "1", "2": "2", "6": "6", "12": "12"}},

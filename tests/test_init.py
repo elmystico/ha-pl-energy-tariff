@@ -36,7 +36,9 @@ async def g13_dynamic(hass: HomeAssistant, freezer):
     freezer.move_to("2026-10-13 12:30:00+02:00")
     hass.states.async_set(SRC, "536.09", tge_attrs())
     result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": "user"})
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {"group": "g13", "energy_mode": "dynamic"})
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {"operator": "tauron", "energy_mode": "dynamic"})
+    assert result["step_id"] == "group"
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {"group": "g13"})
     assert result["step_id"] == "energy_dynamic"
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {
         "price_entity": SRC, "source_includes_vat": False, "margin": 0.0892, "excise": 0.0})
@@ -45,6 +47,10 @@ async def g13_dynamic(hass: HomeAssistant, freezer):
         "dist_morning_peak": 0.2203, "dist_afternoon_peak": 0.3898, "dist_other": 0.0392,
         "quality_fee": 0.0331, "oze_fee": 0.0073, "cogeneration_fee": 0.0030, "vat": 0.23,
         "phases": "3", "billing_months": "1", "capacity_bracket": "1200_2800"})
+    assert result["step_id"] == "zones"
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {
+        "hours_morning_peak": "7-13", "hours_morning_peak_summer": "7-13",
+        "hours_afternoon_peak": "16-21", "hours_afternoon_peak_summer": "19-22"})
     assert result["type"] == "create_entry"
     assert result["title"] == "Taryfa G13 dynamiczna"
     await _done(hass)
@@ -149,7 +155,8 @@ async def test_missing_source_is_unavailable_not_crash(hass: HomeAssistant, free
 async def test_flow_rejects_bad_entity(hass: HomeAssistant):
     hass.states.async_set("sensor.foo", "1", {"unit_of_measurement": "°C"})
     r = await hass.config_entries.flow.async_init(DOMAIN, context={"source": "user"})
-    r = await hass.config_entries.flow.async_configure(r["flow_id"], {"group": "g13", "energy_mode": "dynamic"})
+    r = await hass.config_entries.flow.async_configure(r["flow_id"], {"operator": "tauron", "energy_mode": "dynamic"})
+    r = await hass.config_entries.flow.async_configure(r["flow_id"], {"group": "g13"})
     r = await hass.config_entries.flow.async_configure(r["flow_id"], {
         "price_entity": "sensor.foo", "source_includes_vat": False, "margin": 0.0892, "excise": 0.0})
     assert r["errors"] == {"price_entity": "unsupported_unit"}
@@ -165,6 +172,10 @@ async def test_options_change_margin(hass: HomeAssistant, g13_dynamic):
         "dist_morning_peak": 0.2203, "dist_afternoon_peak": 0.3898, "dist_other": 0.0392,
         "quality_fee": 0.0331, "oze_fee": 0.0073, "cogeneration_fee": 0.0030, "vat": 0.23,
         "phases": "1", "billing_months": "1", "capacity_bracket": "1200_2800"})
+    assert r["step_id"] == "zones"
+    r = await hass.config_entries.options.async_configure(r["flow_id"], {
+        "hours_morning_peak": "7-13", "hours_morning_peak_summer": "7-13",
+        "hours_afternoon_peak": "16-21", "hours_afternoon_peak_summer": "19-22"})
     assert r["step_id"] == "indicators"
     r = await hass.config_entries.options.async_configure(r["flow_id"], {
         "window_hours": 16, "cheap_fraction": 0.25, "extreme_fraction": 0.1667, "reference_days": 7,
@@ -193,3 +204,93 @@ async def test_indicator_entities(hass: HomeAssistant, g13_dynamic):
     assert 0 <= tgt <= 100
     assert hass.states.get("sensor.taryfa_g13_dynamiczna_price_score").state not in ("unknown", "unavailable")
 
+
+
+# ---------- several meters, operators, names, zone hours ----------
+
+async def _create(hass, name, operator, group, mode="fixed", dist=None, zones=None, names=None):
+    r = await hass.config_entries.flow.async_init(DOMAIN, context={"source": "user"})
+    r = await hass.config_entries.flow.async_configure(r["flow_id"], {"name": name, "operator": operator, "energy_mode": mode})
+    assert r["step_id"] == "group"
+    r = await hass.config_entries.flow.async_configure(r["flow_id"], {"group": group})
+    assert r["step_id"] == f"energy_{mode}"
+    r = await hass.config_entries.flow.async_configure(r["flow_id"], {})   # defaults
+    assert r["step_id"] == "distribution", r
+    r = await hass.config_entries.flow.async_configure(r["flow_id"], {**(names or {}), **(dist or {})})
+    if r.get("step_id") == "zones":
+        r = await hass.config_entries.flow.async_configure(r["flow_id"], zones or {})
+    assert r["type"] == "create_entry", r
+    await _done(hass)
+    return r["result"]
+
+
+async def test_two_meters_different_operators(hass: HomeAssistant, freezer):
+    from homeassistant.helpers import device_registry as dr
+    await hass.config.async_set_time_zone("Europe/Warsaw")
+    freezer.move_to("2026-10-13 14:30:00+02:00")   # Tuesday, winter
+    home = await _create(hass, "Dom", "tauron", "g11")
+    garage = await _create(hass, "Garaż", "pge", "g12")
+    assert home.title == "Dom" and garage.title == "Garaż"
+    assert garage.data["operator"] == "pge"
+    st = hass.states.get("sensor.garaz_zone")
+    assert st.state == "night"                          # PGE G12 winter: night 13–15
+    assert st.attributes["operator"] == "pge"
+    assert hass.states.get("sensor.dom_total_price") is not None
+    dev = dr.async_get(hass).async_get_device({(DOMAIN, garage.entry_id)})
+    assert dev.manufacturer == "PGE Dystrybucja"
+    dev = dr.async_get(hass).async_get_device({(DOMAIN, home.entry_id)})
+    assert dev.manufacturer == "TAURON Dystrybucja / TAURON Sprzedaż"
+    g = float(hass.states.get("sensor.garaz_distribution_price").state)
+    assert g == pytest.approx((0.0765 + 0.0331 + 0.0073 + 0.0030) * 1.23, abs=1e-5)
+
+
+async def test_pge_g12_summer_hours(hass: HomeAssistant, freezer):
+    await hass.config.async_set_time_zone("Europe/Warsaw")
+    freezer.move_to("2026-07-14 14:30:00+02:00")
+    await _create(hass, "Lato", "pge", "g12")
+    assert hass.states.get("sensor.lato_zone").state == "day"       # summer night is 15–17
+
+
+async def test_custom_names_and_hours(hass: HomeAssistant, freezer):
+    from homeassistant.helpers import device_registry as dr
+    await hass.config.async_set_time_zone("Europe/Warsaw")
+    freezer.move_to("2026-10-13 16:30:00+02:00")
+    e = await _create(hass, "", "enea", "g12",
+                      names={"operator_name": "Enea Operator Poznań", "seller_name": "Mój sprzedawca"},
+                      zones={"hours_night": "15:00-17:00; 22-6"})
+    assert e.title == "Taryfa Enea G12 stała"
+    assert e.options["hours_night"] == "15-17, 22-6"
+    assert hass.states.get("sensor.taryfa_enea_g12_stala_zone").state == "night"
+    dev = dr.async_get(hass).async_get_device({(DOMAIN, e.entry_id)})
+    assert dev.manufacturer == "Enea Operator Poznań / Mój sprzedawca"
+
+
+async def test_zone_hours_validation(hass: HomeAssistant):
+    r = await hass.config_entries.flow.async_init(DOMAIN, context={"source": "user"})
+    r = await hass.config_entries.flow.async_configure(r["flow_id"], {"operator": "energa", "energy_mode": "fixed"})
+    r = await hass.config_entries.flow.async_configure(r["flow_id"], {"group": "g12r"})
+    r = await hass.config_entries.flow.async_configure(r["flow_id"], {})
+    r = await hass.config_entries.flow.async_configure(r["flow_id"], {})
+    assert r["step_id"] == "zones"
+    r = await hass.config_entries.flow.async_configure(r["flow_id"], {"hours_offpeak": "13-16, 25-7"})
+    assert r["errors"] == {"hours_offpeak": "invalid_hours"}
+    r = await hass.config_entries.flow.async_configure(r["flow_id"], {"hours_offpeak": ""})
+    assert r["errors"] == {"hours_offpeak": "empty_hours"}
+    r = await hass.config_entries.flow.async_configure(r["flow_id"], {"hours_offpeak": "13-16, 22-7"})
+    assert r["type"] == "create_entry"
+
+
+async def test_group_list_depends_on_operator(hass: HomeAssistant):
+    r = await hass.config_entries.flow.async_init(DOMAIN, context={"source": "user"})
+    r = await hass.config_entries.flow.async_configure(r["flow_id"], {"operator": "stoen", "energy_mode": "fixed"})
+    sel = next(v for k, v in r["data_schema"].schema.items() if k == "group")
+    assert sel.config["options"] == ["g11", "g12", "g12w", "g12as"]
+
+
+async def test_same_title_gets_suffix(hass: HomeAssistant, g13_dynamic):
+    e2 = MockConfigEntry(domain=DOMAIN, title="Taryfa G13 dynamiczna",
+                         data={"group": "G13", "energy_mode": "dynamic"}, options={"price_entity": SRC})
+    e2.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(e2.entry_id)
+    await _done(hass)
+    assert hass.states.get("sensor.taryfa_g13_dynamiczna_total_price_2") is not None

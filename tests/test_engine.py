@@ -1,3 +1,4 @@
+from dataclasses import replace
 from datetime import date, datetime, timedelta
 
 import pytest
@@ -202,3 +203,81 @@ def test_cheapest_window_total_vs_exchange():
     assert w_total.start.hour != 11
     w_max = find_window(total, timedelta(hours=2), MODE_EXPENSIVE)
     assert (w_max.start.hour, w_max.end.hour) == (18, 20)
+
+
+# ---------- operators and editable zone hours ----------
+
+def test_parse_ranges():
+    assert T.parse_ranges("13-15, 22-6") == ((13, 15), (22, 6))
+    assert T.parse_ranges("13:00 – 15:00; 22-24") == ((13, 15), (22, 0))
+    assert T.parse_ranges("") == ()
+    for bad in ("13", "25-6", "6-6", "a-b", "13-15,,x"):
+        with pytest.raises(ValueError):
+            T.parse_ranges(bad)
+    assert T.format_ranges(((13, 15), (22, 6))) == "13-15, 22-6"
+
+
+def test_operator_catalogue_consistent():
+    for op in T.OPERATORS.values():
+        assert op.subscription[1] > 0
+        for g in op.groups.values():
+            assert set(g.energy_rates) == set(g.energy_zones), (op.key, g.key)
+            if g.classify_fn is None:
+                assert set(g.dist_rates) == set(g.energy_zones), (op.key, g.key)
+            sch = g.schedule
+            if sch:
+                zones = {sch.default, *sch.winter, *(sch.summer or {})}
+                if sch.dayoff_zone:
+                    zones.add(sch.dayoff_zone)
+                assert zones <= set(g.energy_zones), (op.key, g.key)
+            # every hour of a week, summer and winter, maps to a known zone
+            for day in (date(2026, 1, 12), date(2026, 7, 13)):
+                for h in range(24 * 7):
+                    t = datetime.combine(day, datetime.min.time(), TZ) + timedelta(hours=h)
+                    z, k = g.classify(t)
+                    assert z in g.energy_zones and k in g.dist_rates
+
+
+def c(op, grp, *a):
+    return T.group(op, grp).classify(dt(*a))[0]
+
+
+def test_pge_zones():
+    assert c("pge", "G12", 2026, 1, 13, 14) == "night"     # winter 13–15
+    assert c("pge", "G12", 2026, 7, 14, 14) == "day"       # summer 15–17
+    assert c("pge", "G12", 2026, 7, 14, 16) == "night"
+    assert c("pge", "G12w", 2026, 7, 18, 10) == "offpeak"  # Saturday
+    assert c("pge", "G12n", 2026, 10, 17, 10) == "day"     # Saturday is a normal day in G12n
+    assert c("pge", "G12n", 2026, 10, 17, 2) == "night"    # 1–5
+    assert c("pge", "G12n", 2026, 10, 18, 10) == "night"   # Sunday
+    assert c("pge", "G12n", 2026, 11, 11, 12) == "night"   # holiday
+
+
+def test_enea_energa_stoen_zones():
+    assert c("enea", "G12w", 2026, 10, 13, 20) == "peak"      # Enea G12w peak 6–21
+    assert c("enea", "G12w", 2026, 10, 13, 21) == "offpeak"
+    assert c("energa", "G12r", 2026, 10, 13, 15) == "offpeak"  # 13–16
+    assert c("energa", "G12r", 2026, 10, 13, 6) == "offpeak"   # 22–7
+    assert c("energa", "G12r", 2026, 10, 13, 7) == "peak"
+    assert c("stoen", "G12w", 2026, 10, 13, 14) == "peak"      # Stoen G12w: no afternoon valley
+    assert c("stoen", "G12w", 2026, 10, 13, 22) == "offpeak"
+
+
+def test_schedule_from_options():
+    base = T.group("pge", "G12").schedule
+    s = T.schedule_from_options(base, {"hours_night": "22-7", "hours_night_summer": ""})
+    assert s.zone(dt(2026, 7, 14, 16)) == "day"      # empty summer = winter hours
+    assert s.zone(dt(2026, 7, 14, 6)) == "night"
+    s = T.schedule_from_options(base, {})
+    assert s == base
+    with pytest.raises(ValueError):
+        T.schedule_from_options(base, {"hours_night": "x"})
+
+
+def test_config_uses_custom_schedule_and_operator_fees():
+    sch = T.schedule_from_options(T.group("enea", "G12").schedule, {"hours_night": "15-17, 22-6"})
+    cfg = replace(TariffConfig.defaults("G12", MODE_FIXED, "enea"), schedule=sch)
+    assert cfg.classify(dt(2026, 10, 13, 16))[0] == "night"
+    assert cfg.quality_fee == 0.0332
+    assert monthly_fixed(cfg)["subscription"] == round(3.84 * 1.23, 2)
+    assert cfg.manufacturer == "ENEA Operator"

@@ -27,6 +27,10 @@ class SourcePoint:
 class TariffConfig:
     group: str
     energy_mode: str = MODE_DYNAMIC
+    operator: str = T.DEFAULT_OPERATOR
+    schedule: T.Schedule | None = None  # user zone hours; None = operator default
+    operator_name: str | None = None    # shown as the device manufacturer; None = preset
+    seller_name: str | None = None
     dist_rates: dict[str, float] = field(default_factory=dict)
     energy_rates: dict[str, float] = field(default_factory=dict)
     margin: float = T.DYNAMIC_MARGIN
@@ -43,7 +47,20 @@ class TariffConfig:
 
     @property
     def tariff(self) -> T.TariffGroup:
-        return T.GROUPS[self.group]
+        return T.group(self.operator, self.group)
+
+    @property
+    def op(self) -> T.Operator:
+        return T.operator(self.operator)
+
+    @property
+    def manufacturer(self) -> str | None:
+        op = self.operator_name if self.operator_name is not None else self.op.name
+        sl = self.seller_name if self.seller_name is not None else self.op.seller
+        return " / ".join(x.strip() for x in (op, sl) if x and x.strip()) or None
+
+    def classify(self, local: datetime) -> tuple[str, str]:
+        return self.tariff.classify(local, self.schedule)
 
     def dist_rate(self, key: str) -> float:
         return self.dist_rates.get(key, self.tariff.dist_rates[key])
@@ -52,11 +69,14 @@ class TariffConfig:
         return self.energy_rates.get(zone, self.tariff.energy_rates[zone])
 
     @staticmethod
-    def defaults(group: str, energy_mode: str = MODE_DYNAMIC) -> "TariffConfig":
-        g = T.GROUPS[group]
+    def defaults(group: str, energy_mode: str = MODE_DYNAMIC,
+                 operator: str = T.DEFAULT_OPERATOR) -> "TariffConfig":
+        g = T.group(operator, group)
         return TariffConfig(
             group=group,
             energy_mode=energy_mode,
+            operator=operator,
+            quality_fee=T.operator(operator).quality_fee,
             dist_rates=dict(g.dist_rates),
             energy_rates=dict(g.energy_rates),
             excise=0.0 if energy_mode == MODE_DYNAMIC else T.EXCISE,
@@ -76,7 +96,7 @@ class PricedSlot:
 
 def price_slot(cfg: TariffConfig, start: datetime, end: datetime, exchange: float | None) -> PricedSlot:
     local = start.astimezone(TZ)
-    zone, rate_key = cfg.tariff.classify(local)
+    zone, rate_key = cfg.classify(local)
     k = 1 + cfg.vat
     if cfg.energy_mode == MODE_DYNAMIC:
         if exchange is None:
@@ -131,7 +151,7 @@ def monthly_fixed(cfg: TariffConfig) -> dict[str, float]:
     ]
     parts = {
         "network_fixed": network,
-        "subscription": T.SUBSCRIPTION_FEE.get(cfg.billing_months, T.SUBSCRIPTION_FEE[1]),
+        "subscription": cfg.op.subscription.get(cfg.billing_months, cfg.op.subscription[1]),
         "capacity": T.CAPACITY_FEE.get(cfg.capacity_bracket, T.CAPACITY_FEE["1200_2800"]),
         "trade": cfg.trade_fee,
     }

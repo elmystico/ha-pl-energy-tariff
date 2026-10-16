@@ -3,10 +3,18 @@
     "step": {
       "user": {
         "title": "Taryfa energii",
-        "description": "Operator: TAURON Dystrybucja. Wybierz grupę taryfową i sposób rozliczania energii.",
+        "description": "Jeden wpis = jeden licznik. Nazwa wyznacza identyfikatory encji (np. „Dom” → `sensor.dom_total_price`); pusta = „Taryfa G13 dynamiczna”.",
         "data": {
-          "group": "Grupa taryfowa",
+          "name": "Nazwa (opcjonalnie)",
+          "operator": "Operator sieci (OSD)",
           "energy_mode": "Cena energii"
+        }
+      },
+      "group": {
+        "title": "Grupa taryfowa",
+        "description": "Grupy dostępne u operatora {operator}.",
+        "data": {
+          "group": "Grupa taryfowa"
         }
       },
       "energy_dynamic": {
@@ -21,7 +29,7 @@
       },
       "energy_fixed": {
         "title": "Cena stała",
-        "description": "Ceny energii netto bez akcyzy. Domyślnie taryfa TAURON Sprzedaż 2026 (decyzja URE z 17.12.2025). Dla G12as i G13s sprzedawca nie publikuje osobnych cen – wpisz ceny ze swojej umowy.",
+        "description": "Ceny energii netto bez akcyzy. Domyślnie taryfa TAURON Sprzedaż 2026 (decyzja URE z 17.12.2025), niezależnie od operatora – wpisz ceny ze swojej umowy, jeśli masz innego sprzedawcę lub grupę G12as, G12n, G12r albo G13s.",
         "data": {
           "energy_afternoon_peak": "Energia – szczyt popołudniowy [zł/kWh netto]",
           "energy_allday": "Energia – całodobowa [zł/kWh netto]",
@@ -39,8 +47,10 @@
       },
       "distribution": {
         "title": "Dystrybucja i opłaty",
-        "description": "Stawki TAURON Dystrybucja dla {group}, netto, ważne od 01.02.2026. Dla G12as stawka nocna 0,0246 dotyczy tylko nadwyżki zużycia nocnego ponad analogiczny okres poprzedniego roku.",
+        "description": "Operator: {operator}, grupa {group}. {rates_note} Nazwy operatora i sprzedawcy są widoczne jako producent urządzenia.",
         "data": {
+          "operator_name": "Operator sieci (OSD) – nazwa",
+          "seller_name": "Sprzedawca energii – nazwa",
           "dist_afternoon_peak": "Dystrybucja – szczyt popołudniowy [zł/kWh netto]",
           "dist_allday": "Dystrybucja – całodobowa [zł/kWh netto]",
           "dist_day": "Dystrybucja – dzienna [zł/kWh netto]",
@@ -69,12 +79,29 @@
           "billing_months": "Okres rozliczeniowy [mies.]",
           "capacity_bracket": "Roczne zużycie (opłata mocowa)"
         }
+      },
+      "zones": {
+        "title": "Godziny stref",
+        "description": "Godziny dla {group} w formacie `13-15, 22-6` (pełne godziny, zakres może przechodzić przez północ). Pozostałe godziny należą do strefy „{default_zone}”. {dayoff} Sprawdź godziny w umowie, na fakturze lub na wyświetlaczu licznika – u części operatorów (np. Enea G12) ustala je operator indywidualnie.",
+        "data": {
+          "hours_afternoon_peak": "Godziny strefy „szczyt popołudniowy” – zima (1.10–31.03)",
+          "hours_morning_peak": "Godziny strefy „szczyt przedpołudniowy” – zima (1.10–31.03)",
+          "hours_night": "Godziny strefy „nocna” – zima (1.10–31.03)",
+          "hours_offpeak": "Godziny strefy „pozaszczytowa” – zima (1.10–31.03)",
+          "hours_peak": "Godziny strefy „szczytowa”",
+          "hours_afternoon_peak_summer": "Godziny strefy „szczyt popołudniowy” – lato (1.04–30.09)",
+          "hours_morning_peak_summer": "Godziny strefy „szczyt przedpołudniowy” – lato (1.04–30.09)",
+          "hours_night_summer": "Godziny strefy „nocna” – lato (1.04–30.09)",
+          "hours_offpeak_summer": "Godziny strefy „pozaszczytowa” – lato (1.04–30.09)"
+        }
       }
     },
     "error": {
       "entity_not_found": "Nie znaleziono encji.",
       "unsupported_unit": "Nieobsługiwana jednostka ceny (obsługiwane: zł/MWh, zł/kWh, gr/kWh, PLN/MWh, PLN/kWh).",
-      "no_price_list": "Encja nie ma listy cen w atrybutach (prices_today / prices)."
+      "no_price_list": "Encja nie ma listy cen w atrybutach (prices_today / prices).",
+      "invalid_hours": "Niepoprawny zapis godzin – użyj np. `13-15, 22-6`.",
+      "empty_hours": "Podaj co najmniej jeden zakres godzin."
     }
   },
   "options": {
@@ -101,8 +128,10 @@
       },
       "distribution": {
         "title": "Dystrybucja i opłaty",
-        "description": "Stawki TAURON Dystrybucja dla {group}, netto, ważne od 01.02.2026. Dla G12as stawka nocna 0,0246 dotyczy tylko nadwyżki zużycia nocnego ponad analogiczny okres poprzedniego roku.",
+        "description": "Operator: {operator}, grupa {group}. {rates_note} Nazwy operatora i sprzedawcy są widoczne jako producent urządzenia.",
         "data": {
+          "operator_name": "Operator sieci (OSD) – nazwa",
+          "seller_name": "Sprzedawca energii – nazwa",
           "dist_afternoon_peak": "Dystrybucja – szczyt popołudniowy [zł/kWh netto]",
           "dist_allday": "Dystrybucja – całodobowa [zł/kWh netto]",
           "dist_day": "Dystrybucja – dzienna [zł/kWh netto]",
@@ -132,6 +161,21 @@
           "capacity_bracket": "Roczne zużycie (opłata mocowa)"
         }
       },
+      "zones": {
+        "title": "Godziny stref",
+        "description": "Godziny dla {group} w formacie `13-15, 22-6` (pełne godziny, zakres może przechodzić przez północ). Pozostałe godziny należą do strefy „{default_zone}”. {dayoff} Sprawdź godziny w umowie, na fakturze lub na wyświetlaczu licznika – u części operatorów (np. Enea G12) ustala je operator indywidualnie.",
+        "data": {
+          "hours_afternoon_peak": "Godziny strefy „szczyt popołudniowy” – zima (1.10–31.03)",
+          "hours_morning_peak": "Godziny strefy „szczyt przedpołudniowy” – zima (1.10–31.03)",
+          "hours_night": "Godziny strefy „nocna” – zima (1.10–31.03)",
+          "hours_offpeak": "Godziny strefy „pozaszczytowa” – zima (1.10–31.03)",
+          "hours_peak": "Godziny strefy „szczytowa”",
+          "hours_afternoon_peak_summer": "Godziny strefy „szczyt popołudniowy” – lato (1.04–30.09)",
+          "hours_morning_peak_summer": "Godziny strefy „szczyt przedpołudniowy” – lato (1.04–30.09)",
+          "hours_night_summer": "Godziny strefy „nocna” – lato (1.04–30.09)",
+          "hours_offpeak_summer": "Godziny strefy „pozaszczytowa” – lato (1.04–30.09)"
+        }
+      },
       "indicators": {
         "title": "Wskaźniki ceny",
         "description": "Cena odniesienia = ważona średnia inercji prognozy (τ = długość prognozy) i inercji historii (τ = okres − długość prognozy). Ranking: tanie/drogie godziny w oknie od teraz.",
@@ -150,7 +194,9 @@
     "error": {
       "entity_not_found": "Nie znaleziono encji.",
       "unsupported_unit": "Nieobsługiwana jednostka ceny (obsługiwane: zł/MWh, zł/kWh, gr/kWh, PLN/MWh, PLN/kWh).",
-      "no_price_list": "Encja nie ma listy cen w atrybutach (prices_today / prices)."
+      "no_price_list": "Encja nie ma listy cen w atrybutach (prices_today / prices).",
+      "invalid_hours": "Niepoprawny zapis godzin – użyj np. `13-15, 22-6`.",
+      "empty_hours": "Podaj co najmniej jeden zakres godzin."
     }
   },
   "selector": {
@@ -161,7 +207,19 @@
         "g12w": "G12w",
         "g12as": "G12as",
         "g13": "G13",
-        "g13s": "G13s"
+        "g13s": "G13s",
+        "g12r": "G12r",
+        "g12n": "G12n"
+      }
+    },
+    "operator": {
+      "options": {
+        "tauron": "TAURON Dystrybucja",
+        "enea": "ENEA Operator",
+        "energa": "Energa-Operator",
+        "pge": "PGE Dystrybucja",
+        "stoen": "Stoen Operator",
+        "other": "inny (własne stawki)"
       }
     },
     "energy_mode": {
