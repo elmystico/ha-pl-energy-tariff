@@ -44,7 +44,7 @@ def build(lang):
         hours[f"hours_{z}"] = L(f"Godziny strefy „{zn}” – zima (1.10–31.03)", f"Hours of zone '{zn}' – winter (Oct–Mar)")
         hours[f"hours_{z}_summer"] = L(f"Godziny strefy „{zn}” – lato (1.04–30.09)", f"Hours of zone '{zn}' – summer (Apr–Sep)")
     zones_desc = L("Godziny dla {group} w formacie `13-15, 22-6` (pełne godziny, zakres może przechodzić przez północ). Pozostałe godziny należą do strefy „{default_zone}”. {dayoff} Sprawdź godziny w umowie, na fakturze lub na wyświetlaczu licznika – u części operatorów (np. Enea G12) ustala je operator indywidualnie.",
-                   "Hours for {group} as `13-15, 22-6` (full hours, a range may wrap midnight). All other hours belong to zone '{default_zone}'. {dayoff} Check the hours in your contract, invoice or on the meter display – some operators (e.g. Enea G12) set them per meter.")
+                   "Hours for {group} as `13-15, 22-6` (full hours, a range may wrap midnight). All other hours belong to zone “{default_zone}”. {dayoff} Check the hours in your contract, invoice or on the meter display – some operators (e.g. Enea G12) set them per meter.")
     common_dist = {
         "quality_fee": L("Opłata jakościowa [zł/kWh netto]", "Quality fee [zł/kWh net]"),
         "oze_fee": L("Opłata OZE [zł/kWh netto]", "RES (OZE) fee [zł/kWh net]"),

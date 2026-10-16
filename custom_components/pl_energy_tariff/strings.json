@@ -82,7 +82,7 @@
       },
       "zones": {
         "title": "Zone hours",
-        "description": "Hours for {group} as `13-15, 22-6` (full hours, a range may wrap midnight). All other hours belong to zone '{default_zone}'. {dayoff} Check the hours in your contract, invoice or on the meter display – some operators (e.g. Enea G12) set them per meter.",
+        "description": "Hours for {group} as `13-15, 22-6` (full hours, a range may wrap midnight). All other hours belong to zone “{default_zone}”. {dayoff} Check the hours in your contract, invoice or on the meter display – some operators (e.g. Enea G12) set them per meter.",
         "data": {
           "hours_afternoon_peak": "Hours of zone 'afternoon peak' – winter (Oct–Mar)",
           "hours_morning_peak": "Hours of zone 'morning peak' – winter (Oct–Mar)",
@@ -163,7 +163,7 @@
       },
       "zones": {
         "title": "Zone hours",
-        "description": "Hours for {group} as `13-15, 22-6` (full hours, a range may wrap midnight). All other hours belong to zone '{default_zone}'. {dayoff} Check the hours in your contract, invoice or on the meter display – some operators (e.g. Enea G12) set them per meter.",
+        "description": "Hours for {group} as `13-15, 22-6` (full hours, a range may wrap midnight). All other hours belong to zone “{default_zone}”. {dayoff} Check the hours in your contract, invoice or on the meter display – some operators (e.g. Enea G12) set them per meter.",
         "data": {
           "hours_afternoon_peak": "Hours of zone 'afternoon peak' – winter (Oct–Mar)",
           "hours_morning_peak": "Hours of zone 'morning peak' – winter (Oct–Mar)",

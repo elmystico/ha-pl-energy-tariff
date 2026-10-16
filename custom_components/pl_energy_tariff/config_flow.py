@@ -149,7 +149,7 @@ def zones_placeholders(hass: HomeAssistant, op: str, group: str) -> dict[str, st
         dz = T.ZONE_NAMES_PL.get(sch.dayoff_zone, sch.dayoff_zone) if pl else sch.dayoff_zone
         days = ("niedziele i święta" if pl else "Sundays and holidays") if sch.dayoff == T.DAYOFF_SUNDAY \
             else ("soboty, niedziele i święta" if pl else "Saturdays, Sundays and holidays")
-        dayoff = (f"{days}: cała doba w strefie „{dz}”." if pl else f"{days}: all day in zone '{dz}'.")
+        dayoff = (f"{days}: cała doba w strefie „{dz}”." if pl else f"{days}: all day in zone “{dz}”.")
     else:
         dayoff = "Dni wolne liczone jak robocze." if pl else "Days off are treated as workdays."
     return {"group": group, "default_zone": zone, "dayoff": dayoff}
