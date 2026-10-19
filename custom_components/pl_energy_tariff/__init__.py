@@ -150,7 +150,7 @@ def _register_services(hass: HomeAssistant) -> None:
             "average": round(w.average, 5),
             "min": round(min(prices), 5),
             "max": round(max(prices), 5),
-            "unit": "zł/kWh",
+            "unit": "PLN/kWh",
             "price": field,
             "contiguous": w.contiguous,
             "ranges": [{"start": s.isoformat(), "end": e.isoformat()} for s, e in w.ranges],

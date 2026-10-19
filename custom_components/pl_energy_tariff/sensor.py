@@ -23,7 +23,7 @@ from .coordinator import TariffCoordinator
 from .indicators import LEVELS
 from .pricing import MODE_DYNAMIC, TZ, PricedSlot, slot_at
 
-UNIT = "zł/kWh"
+UNIT = "PLN/kWh"  # kod waluty ISO 4217 (wymóg HA dla monetary i panelu Energia)
 LIST_ATTRS = frozenset({"prices", "prices_today", "prices_tomorrow"})
 
 
@@ -168,7 +168,7 @@ class ZoneSensor(TariffEntity, SensorEntity):
 
 class FixedCostSensor(TariffEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.MONETARY
-    _attr_native_unit_of_measurement = "zł"
+    _attr_native_unit_of_measurement = "PLN"
     _attr_suggested_display_precision = 2
     _attr_icon = "mdi:calendar-month"
 

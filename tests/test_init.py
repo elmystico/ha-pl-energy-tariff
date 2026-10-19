@@ -90,7 +90,7 @@ async def test_find_window(hass: HomeAssistant, g13_dynamic):
     r = await call(duration=3, period="today")
     assert r["found"] is True
     assert r["hours"] == 3
-    assert r["unit"] == "zł/kWh"
+    assert r["unit"] == "PLN/kWh"
     start = dt_util.parse_datetime(r["start"])
     assert start.hour not in (7, 8, 9, 10, 11, 12, 16, 17, 18, 19, 20)   # outside G13 peaks
     r2 = await call(duration=2, period="today", mode="most_expensive")

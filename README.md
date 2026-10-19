@@ -94,6 +94,11 @@ Prefiks encji pochodzi z nazwy podanej przy dodawaniu wpisu („Dom” → `dom`
 z automatycznej, np. `taryfa_g13_dynamiczna`. Późniejsza zmiana nazwy wpisu nie zmienia
 identyfikatorów encji. Dwa wpisy o tej samej nazwie dostaną końcówkę `_2`.
 
+Jednostki encji to `PLN/kWh` i `PLN` — kod waluty wg ISO 4217, jakiego HA wymaga dla
+kwot (`monetary`) i cen w panelu Energia; z nich korzystają też np. sensory kosztu
+Powercalc. Do wersji 0.3.0 było `zł/kWh` i `zł` (po aktualizacji HA zaproponuje
+przepisanie jednostki statystyk — wartości się nie zmieniają).
+
 | Encja | Stan | Atrybuty |
 |---|---|---|
 | `sensor.<prefiks>_total_price` | cena całkowita teraz [zł/kWh brutto] | `prices_today`, `prices_tomorrow`, `prices` (`{time, price}`), `zone`, `energy`, `distribution`, `exchange_netto`, `tomorrow_available` |
