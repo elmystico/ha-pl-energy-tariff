@@ -128,6 +128,9 @@ przepisanie jednostki statystyk — wartości się nie zmieniają).
 Tymi samymi wagami liczone jest odchylenie σ, a z niego **odchylenie ceny**
 100·(cena − R)/(σ·R), w tej samej skali co dawna „standaryzowana cena prądu”.
 
+Jak z tych wskaźników budować sterowanie odbiornikami funkcjami ciągłymi zamiast
+progów — [docs/sterowanie-procesowe.md](docs/sterowanie-procesowe.md).
+
 **Okno rankingu**: sloty od bieżącego do 16 h naprzód. 1/4 najtańszych to „tanio”,
 1/6 to „bardzo tanio”, symetrycznie drogo. Gdy do końca prognozy zostało mniej niż 4 h,
 ranking jest niedostępny.
