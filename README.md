@@ -94,10 +94,11 @@ Prefiks encji pochodzi z nazwy podanej przy dodawaniu wpisu („Dom” → `dom`
 z automatycznej, np. `taryfa_g13_dynamiczna`. Późniejsza zmiana nazwy wpisu nie zmienia
 identyfikatorów encji. Dwa wpisy o tej samej nazwie dostaną końcówkę `_2`.
 
-Jednostki encji to `PLN/kWh` i `PLN` — kod waluty wg ISO 4217, jakiego HA wymaga dla
+Jednostki encji to `PLN/kWh` i `PLN/d` — kod waluty wg ISO 4217, jakiego HA wymaga dla
 kwot (`monetary`) i cen w panelu Energia; z nich korzystają też np. sensory kosztu
-Powercalc. Do wersji 0.3.0 było `zł/kWh` i `zł` (po aktualizacji HA zaproponuje
-przepisanie jednostki statystyk — wartości się nie zmieniają).
+Powercalc. Do wersji 0.3.0 było `zł/kWh` i `zł`. Od 0.4.0 opłaty stałe są dobowe
+(`fixed_daily_cost`, wcześniej `fixed_monthly_cost` w zł/mies.) — encja jest przemianowywana
+automatycznie, a składnik dobowy da się wprost dodać do dziennych kosztów zużycia.
 
 | Encja | Stan | Atrybuty |
 |---|---|---|
@@ -106,7 +107,7 @@ przepisanie jednostki statystyk — wartości się nie zmieniają).
 | `sensor.<prefiks>_distribution_price` | część za dystrybucję [zł/kWh brutto] | listy jak wyżej |
 | `sensor.<prefiks>_next_total_price` | cena całkowita w następnym okresie | `start`, `zone` |
 | `sensor.<prefiks>_zone` | strefa taryfowa (`morning_peak`, `other`, …) | `zone_name`, `rate_key`, `group`, `operator` |
-| `sensor.<prefiks>_fixed_monthly_cost` | opłaty stałe [zł/mies. brutto] | rozbicie na składniki |
+| `sensor.<prefiks>_fixed_daily_cost` | opłaty stałe na dobę [PLN/d brutto] — składniki miesięczne podzielone przez liczbę dni bieżącego miesiąca (suma z dni miesiąca = kwota miesięczna, niezależnie od taryfy) | składniki na dobę, `days_in_month`, kwoty miesięczne `monthly_*` |
 | `sensor.<prefiks>_reference_price` | cena odniesienia [zł/kWh] | `forecast_inertia`, `history_inertia`, `forecast_hours`, `tau_*_h`, `sigma` |
 | `sensor.<prefiks>_price_score` | odchylenie ceny od odniesienia [%] | – |
 | `sensor.<prefiks>_window_median` | mediana ceny w oknie (domyślnie 16 h) | progi `very_cheap_max`, `cheap_max`, `expensive_min`, `very_expensive_min` |

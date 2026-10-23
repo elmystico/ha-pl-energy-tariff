@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import calendar
+
 from dataclasses import dataclass, field
 from datetime import date, datetime, time, timedelta, timezone
 from zoneinfo import ZoneInfo
@@ -157,4 +159,19 @@ def monthly_fixed(cfg: TariffConfig) -> dict[str, float]:
     }
     out = {k_: round(v * k, 2) for k_, v in parts.items()}
     out["total"] = round(sum(parts.values()) * k, 2)
+    return out
+
+
+def daily_fixed(cfg: TariffConfig, day: date) -> dict[str, float]:
+    """Fixed charges per day, brutto zł/d.
+
+    Fixed components (network fixed, subscription, capacity, trade) are priced per month
+    and prorated by days, so one day of month M costs monthly / days_in(M). Summed over
+    the days of a month this gives exactly the monthly amount, for every tariff group.
+    """
+    days = calendar.monthrange(day.year, day.month)[1]
+    m = monthly_fixed(cfg)
+    out = {k_: round(v / days, 4) for k_, v in m.items()}
+    out["days_in_month"] = days
+    out.update({f"monthly_{k_}": v for k_, v in m.items()})
     return out

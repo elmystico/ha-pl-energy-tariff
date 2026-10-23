@@ -300,8 +300,8 @@
           "peak": "peak"
         }
       },
-      "fixed_monthly_cost": {
-        "name": "Fixed monthly charges"
+      "fixed_daily_cost": {
+        "name": "Fixed charges per day"
       },
       "reference_price": {
         "name": "Reference price"

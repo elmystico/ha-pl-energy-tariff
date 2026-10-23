@@ -300,8 +300,8 @@
           "peak": "szczytowa"
         }
       },
-      "fixed_monthly_cost": {
-        "name": "Opłaty stałe miesięcznie"
+      "fixed_daily_cost": {
+        "name": "Opłaty stałe (doba)"
       },
       "reference_price": {
         "name": "Cena odniesienia"

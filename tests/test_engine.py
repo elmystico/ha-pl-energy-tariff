@@ -13,6 +13,7 @@ from custom_components.pl_energy_tariff.pricing import (
     TariffConfig,
     build_series,
     hourly_slots,
+    daily_fixed,
     monthly_fixed,
     price_slot,
     slot_at,
@@ -164,6 +165,15 @@ def test_monthly_fixed():
     assert m["subscription"] == 5.61
     assert m["capacity"] == 21.13
     assert m["total"] == round((7.38 + 4.56 + 17.18) * 1.23, 2)
+
+
+def test_daily_fixed_sums_to_monthly():
+    cfg = TariffConfig.defaults("G13")
+    m = monthly_fixed(cfg)
+    for d, days in ((date(2026, 2, 1), 28), (date(2028, 2, 1), 29), (date(2026, 4, 1), 30), (date(2026, 10, 1), 31)):
+        f = daily_fixed(cfg, d)
+        assert f["days_in_month"] == days
+        assert f["total"] * days == pytest.approx(m["total"], abs=0.01)
 
 
 # ---------- source ----------

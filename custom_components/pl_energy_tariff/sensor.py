@@ -1,4 +1,4 @@
-"""Sensors: total price and its components, tariff zone, fixed monthly cost."""
+"""Sensors: total price and its components, tariff zone, fixed charges per day."""
 
 from __future__ import annotations
 
@@ -11,6 +11,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -21,14 +22,28 @@ from . import tariffs as T
 from .const import DOMAIN
 from .coordinator import TariffCoordinator
 from .indicators import LEVELS
-from .pricing import MODE_DYNAMIC, TZ, PricedSlot, slot_at
+from .pricing import MODE_DYNAMIC, TZ, PricedSlot, daily_fixed, slot_at
 
 UNIT = "PLN/kWh"  # kod waluty ISO 4217 (wymóg HA dla monetary i panelu Energia)
 LIST_ATTRS = frozenset({"prices", "prices_today", "prices_tomorrow"})
 
 
+def _migrate_fixed_cost_entity(hass: HomeAssistant, entry) -> None:
+    """0.4.0: fixed_monthly_cost (PLN/month) became fixed_daily_cost (PLN/d)."""
+    reg = er.async_get(hass)
+    old_id = reg.async_get_entity_id("sensor", DOMAIN, f"{entry.entry_id}_fixed_monthly_cost")
+    if old_id is None:
+        return
+    changes: dict[str, Any] = {"new_unique_id": f"{entry.entry_id}_fixed_daily_cost"}
+    new_entity_id = old_id.replace("_fixed_monthly_cost", "_fixed_daily_cost")
+    if new_entity_id != old_id and reg.async_get(new_entity_id) is None:
+        changes["new_entity_id"] = new_entity_id
+    reg.async_update_entity(old_id, **changes)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry, async_add_entities: AddEntitiesCallback) -> None:
     coord: TariffCoordinator = entry.runtime_data
+    _migrate_fixed_cost_entity(hass, entry)
     async_add_entities([
         PriceSensor(coord, entry, "total_price", "total"),
         PriceSensor(coord, entry, "energy_price", "energy"),
@@ -167,21 +182,27 @@ class ZoneSensor(TariffEntity, SensorEntity):
 
 
 class FixedCostSensor(TariffEntity, SensorEntity):
-    _attr_device_class = SensorDeviceClass.MONETARY
-    _attr_native_unit_of_measurement = "PLN"
-    _attr_suggested_display_precision = 2
-    _attr_icon = "mdi:calendar-month"
+    """Fixed charges expressed per day (monthly components / days in the current month)."""
+
+    _attr_native_unit_of_measurement = "PLN/d"
+    _attr_suggested_display_precision = 3
+    _attr_icon = "mdi:calendar-today"
 
     def __init__(self, coord, entry) -> None:
-        super().__init__(coord, entry, "fixed_monthly_cost")
+        super().__init__(coord, entry, "fixed_daily_cost")
+
+    def _fixed(self) -> dict[str, float]:
+        # Computed for the current local day so the value follows month length
+        # (28–31 days) without waiting for a coordinator refresh.
+        return daily_fixed(self.coordinator.cfg, self.now().date())
 
     @property
     def native_value(self) -> float:
-        return self.coordinator.data.fixed["total"]
+        return self._fixed()["total"]
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
-        f = dict(self.coordinator.data.fixed)
+        f = self._fixed()
         f.pop("total", None)
         return f
 

@@ -66,8 +66,12 @@ async def test_sensors_dynamic_g13(hass: HomeAssistant, g13_dynamic):
     assert st.attributes["tomorrow_available"] is False
     assert hass.states.get("sensor.taryfa_g13_dynamiczna_zone").state == "morning_peak"
     assert float(hass.states.get("sensor.taryfa_g13_dynamiczna_energy_price").state) == pytest.approx(0.76911, abs=1e-5)
-    fixed = hass.states.get("sensor.taryfa_g13_dynamiczna_fixed_monthly_cost")
-    assert float(fixed.state) == round((10.86 + 4.56 + 17.18) * 1.23, 2)   # 3-phase
+    fixed = hass.states.get("sensor.taryfa_g13_dynamiczna_fixed_daily_cost")
+    monthly = round((10.86 + 4.56 + 17.18) * 1.23, 2)   # 3-phase
+    assert fixed.attributes["unit_of_measurement"] == "PLN/d"
+    assert fixed.attributes["days_in_month"] == 31            # October
+    assert fixed.attributes["monthly_total"] == monthly
+    assert float(fixed.state) == round(monthly / 31, 4)
     nxt = hass.states.get("sensor.taryfa_g13_dynamiczna_next_total_price")
     assert nxt.attributes["zone"] == "other"   # 13:00 leaves the morning peak
 
@@ -294,3 +298,20 @@ async def test_same_title_gets_suffix(hass: HomeAssistant, g13_dynamic):
     assert await hass.config_entries.async_setup(e2.entry_id)
     await _done(hass)
     assert hass.states.get("sensor.taryfa_g13_dynamiczna_total_price_2") is not None
+
+
+async def test_fixed_cost_entity_migrated(hass: HomeAssistant, freezer):
+    """Old fixed_monthly_cost registry entry is renamed, not duplicated."""
+    from homeassistant.helpers import entity_registry as er
+    freezer.move_to("2026-02-10 12:00:00+01:00")
+    entry = MockConfigEntry(domain=DOMAIN, title="Taryfa G11 stała",
+                            data={"group": "G11", "energy_mode": "fixed"}, options={})
+    entry.add_to_hass(hass)
+    reg = er.async_get(hass)
+    reg.async_get_or_create("sensor", DOMAIN, f"{entry.entry_id}_fixed_monthly_cost",
+                            suggested_object_id="taryfa_g11_stala_fixed_monthly_cost", config_entry=entry)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await _done(hass)
+    assert reg.async_get("sensor.taryfa_g11_stala_fixed_monthly_cost") is None
+    st = hass.states.get("sensor.taryfa_g11_stala_fixed_daily_cost")
+    assert st is not None and st.attributes["days_in_month"] == 28

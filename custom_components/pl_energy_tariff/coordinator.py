@@ -69,7 +69,7 @@ from .pricing import (
     PricedSlot,
     TariffConfig,
     build_series,
-    monthly_fixed,
+    daily_fixed,
     slot_at,
 )
 from .source import parse_points
@@ -269,7 +269,7 @@ class TariffCoordinator(DataUpdateCoordinator[TariffData]):
         now = dt_util.utcnow().astimezone(TZ)
         return TariffData(
             series=series,
-            fixed=monthly_fixed(self.cfg),
+            fixed=daily_fixed(self.cfg, now.date()),
             source_error=err,
             built_at=dt_util.utcnow(),
             indicators=self._indicators(series, now),
