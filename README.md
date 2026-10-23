@@ -108,6 +108,7 @@ automatycznie, a składnik dobowy da się wprost dodać do dziennych kosztów zu
 | `sensor.<prefiks>_next_total_price` | cena całkowita w następnym okresie | `start`, `zone` |
 | `sensor.<prefiks>_zone` | strefa taryfowa (`morning_peak`, `other`, …) | `zone_name`, `rate_key`, `group`, `operator` |
 | `sensor.<prefiks>_fixed_daily_cost` | opłaty stałe na dobę [PLN/d brutto] — składniki miesięczne podzielone przez liczbę dni bieżącego miesiąca (suma z dni miesiąca = kwota miesięczna, niezależnie od taryfy) | składniki na dobę, `days_in_month`, kwoty miesięczne `monthly_*` |
+| `sensor.<prefiks>_fixed_cost_today` | opłaty stałe naliczone od północy [PLN], liczone co minutę: dobowa opłata stała × ułamek doby (z uwzględnieniem dób 23/25 h); zerowane o północy (`state_class: total` + `last_reset`), więc statystyki sumują je jak licznik kosztów — godzinowo, dziennie, miesięcznie | `last_reset` |
 | `sensor.<prefiks>_reference_price` | cena odniesienia [zł/kWh] | `forecast_inertia`, `history_inertia`, `forecast_hours`, `tau_*_h`, `sigma` |
 | `sensor.<prefiks>_price_score` | odchylenie ceny od odniesienia [%] | – |
 | `sensor.<prefiks>_window_median` | mediana ceny w oknie (domyślnie 16 h) | progi `very_cheap_max`, `cheap_max`, `expensive_min`, `very_expensive_min` |

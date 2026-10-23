@@ -10,7 +10,8 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.event import async_track_time_change
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -51,6 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry, async_add_entities: AddE
         NextPriceSensor(coord, entry),
         ZoneSensor(coord, entry),
         FixedCostSensor(coord, entry),
+        FixedCostTodaySensor(coord, entry),
         ReferencePriceSensor(coord, entry),
         PriceScoreSensor(coord, entry),
         WindowMedianSensor(coord, entry),
@@ -205,6 +207,51 @@ class FixedCostSensor(TariffEntity, SensorEntity):
         f = self._fixed()
         f.pop("total", None)
         return f
+
+
+class FixedCostTodaySensor(TariffEntity, SensorEntity):
+    """Fixed charges accrued since local midnight, as a continuous cost meter.
+
+    value = daily fixed charge · (seconds since midnight / seconds in the day), recomputed
+    every minute and reset at midnight (state_class total + last_reset), so long-term
+    statistics sum it like any other cost meter (hour, day, month).
+    """
+
+    _attr_device_class = SensorDeviceClass.MONETARY
+    _attr_state_class = SensorStateClass.TOTAL
+    _attr_native_unit_of_measurement = "PLN"
+    _attr_suggested_display_precision = 2
+    _attr_icon = "mdi:cash-clock"
+
+    def __init__(self, coord, entry) -> None:
+        super().__init__(coord, entry, "fixed_cost_today")
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            async_track_time_change(self.hass, self._tick, second=0)
+        )
+
+    @callback
+    def _tick(self, _now) -> None:
+        self.async_write_ha_state()
+
+    def _day(self):
+        now = self.now()
+        start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        end = (start + timedelta(days=1, hours=3)).replace(hour=0)  # next local midnight (DST-safe)
+        return now, start, end
+
+    @property
+    def last_reset(self):
+        return self._day()[1]
+
+    @property
+    def native_value(self) -> float:
+        now, start, end = self._day()
+        # timestamps, not wall-clock subtraction: DST days have 23 h or 25 h
+        frac = (now.timestamp() - start.timestamp()) / (end.timestamp() - start.timestamp())
+        return round(daily_fixed(self.coordinator.cfg, now.date())["total"] * frac, 4)
 
 
 def _iso(d):

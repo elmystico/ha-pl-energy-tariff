@@ -300,6 +300,9 @@
           "peak": "peak"
         }
       },
+      "fixed_cost_today": {
+        "name": "Fixed charges today (accrued)"
+      },
       "fixed_daily_cost": {
         "name": "Fixed charges per day"
       },

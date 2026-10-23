@@ -315,3 +315,25 @@ async def test_fixed_cost_entity_migrated(hass: HomeAssistant, freezer):
     assert reg.async_get("sensor.taryfa_g11_stala_fixed_monthly_cost") is None
     st = hass.states.get("sensor.taryfa_g11_stala_fixed_daily_cost")
     assert st is not None and st.attributes["days_in_month"] == 28
+
+
+async def test_fixed_cost_today_accrues(hass: HomeAssistant, g13_dynamic, freezer):
+    daily = float(hass.states.get("sensor.taryfa_g13_dynamiczna_fixed_daily_cost").state)
+    freezer.move_to("2026-10-13 18:00:00+02:00")
+    async_fire_time_changed(hass)
+    await _done(hass)
+    st = hass.states.get("sensor.taryfa_g13_dynamiczna_fixed_cost_today")
+    assert st.attributes["unit_of_measurement"] == "PLN"
+    assert st.attributes["state_class"] == "total"
+    assert float(st.state) == pytest.approx(daily * 18 / 24, abs=1e-3)
+    assert st.attributes["last_reset"].startswith("2026-10-13T00:00:00")
+
+
+async def test_fixed_cost_today_dst_day(hass: HomeAssistant, g13_dynamic, freezer):
+    # 25.10.2026 has 25 h in Europe/Warsaw; at 12:00 local 13 of 25 hours have passed
+    freezer.move_to("2026-10-25 12:00:00+01:00")
+    async_fire_time_changed(hass)
+    await _done(hass)
+    daily = float(hass.states.get("sensor.taryfa_g13_dynamiczna_fixed_daily_cost").state)
+    st = hass.states.get("sensor.taryfa_g13_dynamiczna_fixed_cost_today")
+    assert float(st.state) == pytest.approx(daily * 13 / 25, abs=1e-3)

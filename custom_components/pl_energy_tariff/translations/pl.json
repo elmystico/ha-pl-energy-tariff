@@ -300,6 +300,9 @@
           "peak": "szczytowa"
         }
       },
+      "fixed_cost_today": {
+        "name": "Opłaty stałe dziś (narastająco)"
+      },
       "fixed_daily_cost": {
         "name": "Opłaty stałe (doba)"
       },
