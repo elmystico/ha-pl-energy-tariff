@@ -311,3 +311,34 @@ def test_dst_25h_day_keeps_repeated_hour():
     assert [p.exchange for p in series] == pytest.approx([(100.0 + i) / 1000 for i in range(25)])
     second_two = datetime(2026, 10, 25, 2, 30, tzinfo=TZ, fold=1)
     assert slot_at(series, second_two).exchange == pytest.approx(0.103)
+
+
+def test_dst_23h_day():
+    """2026-03-29: 02:00–03:00 does not exist -> 23 consecutive slots, zones by local hour."""
+    d = date(2026, 3, 29)
+    slots = hourly_slots(d, 1)
+    assert len(slots) == 23
+    assert all(a[1] == b[0] for a, b in zip(slots, slots[1:]))
+    starts = [s for s, _ in slots]
+    attrs = {"prices_today": [
+        {"time": s.astimezone(TZ).isoformat(), "price": 100.0 + i} for i, s in enumerate(starts)
+    ]}
+    pts = parse_points(attrs, "PLN/MWh")
+    series = build_series(TariffConfig.defaults("G13"), pts, d)
+    assert len(series) == 23
+    assert [p.start.astimezone(TZ).hour for p in series[:4]] == [0, 1, 3, 4]
+    assert series[2].start.astimezone(TZ).utcoffset() == timedelta(hours=2)
+    assert slot_at(series, datetime(2026, 3, 29, 3, 30, tzinfo=TZ)).exchange == pytest.approx(0.102)
+
+
+def test_window_horizon_is_elapsed_time_across_dst():
+    """16 h ahead from 2026-10-24 18:00 covers 16 real hours (17 wall-clock hours later)."""
+    from datetime import timezone
+
+    from custom_components.pl_energy_tariff.indicators import Slot, window_stats
+
+    start = datetime(2026, 10, 24, 0, 0, tzinfo=TZ).astimezone(timezone.utc)
+    slots = [Slot(start + timedelta(hours=i), start + timedelta(hours=i + 1), float(i)) for i in range(49)]
+    now = datetime(2026, 10, 24, 18, 0, tzinfo=TZ)
+    w = window_stats(slots, now, hours=16.0)
+    assert w is not None and w.hours == pytest.approx(16.0)

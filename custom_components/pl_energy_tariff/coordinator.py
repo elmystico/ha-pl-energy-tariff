@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
@@ -210,7 +210,7 @@ class TariffCoordinator(DataUpdateCoordinator[TariffData]):
         for s in series:
             if s.start <= now:
                 self._past[s.start] = s.total
-        cutoff = now - timedelta(days=HISTORY_LOOKBACK_DAYS)
+        cutoff = now.astimezone(timezone.utc) - timedelta(days=HISTORY_LOOKBACK_DAYS)
         self._past = {t: p for t, p in self._past.items() if t >= cutoff}
         first_live = min(self._past) if self._past else now
         merged = {t: p for t, p in self._history.items() if cutoff <= t < first_live}

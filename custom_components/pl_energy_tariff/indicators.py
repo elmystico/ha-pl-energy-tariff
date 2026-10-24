@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Sequence
 
 HOUR = 3600.0
@@ -147,7 +147,7 @@ def window_stats(slots: Sequence[Slot], now: datetime, hours: float = 16.0, frac
     The cheapest ``fraction`` of the window is "cheap", the cheapest ``extreme`` is
     "very cheap"; symmetrically for expensive. Ties go to the cheaper/expensive side.
     """
-    end = now + timedelta(hours=hours)
+    end = now.astimezone(timezone.utc) + timedelta(hours=hours)  # elapsed, not wall time (DST)
     win = [s for s in slots if s.end > now and s.start < end]
     if not win:
         return None
