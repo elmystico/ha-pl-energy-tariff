@@ -208,11 +208,14 @@ def test_cheapest_window_total_vs_exchange():
     exch = [PricePoint(s.start, s.end, s.exchange) for s in series]
     w_total = find_window(total, timedelta(hours=3), MODE_CHEAPEST)
     w_exch = find_window(exch, timedelta(hours=3), MODE_CHEAPEST)
-    assert (w_exch.start.hour, w_exch.end.hour) == (11, 14)   # midday dip on the exchange
-    assert w_total.start.hour in (13, 21, 22, 0, 1, 2, 3)     # outside G13 peaks
-    assert w_total.start.hour != 11
+    def lh(d):  # slot boundaries are UTC; compare local hours
+        return d.astimezone(TZ).hour
+
+    assert (lh(w_exch.start), lh(w_exch.end)) == (11, 14)   # midday dip on the exchange
+    assert lh(w_total.start) in (13, 21, 22, 0, 1, 2, 3)     # outside G13 peaks
+    assert lh(w_total.start) != 11
     w_max = find_window(total, timedelta(hours=2), MODE_EXPENSIVE)
-    assert (w_max.start.hour, w_max.end.hour) == (18, 20)
+    assert (lh(w_max.start), lh(w_max.end)) == (18, 20)
 
 
 # ---------- operators and editable zone hours ----------
@@ -291,3 +294,20 @@ def test_config_uses_custom_schedule_and_operator_fees():
     assert cfg.quality_fee == 0.0332
     assert monthly_fixed(cfg)["subscription"] == round(3.84 * 1.23, 2)
     assert cfg.manufacturer == "ENEA Operator"
+
+
+def test_dst_25h_day_keeps_repeated_hour():
+    """2026-10-25: 02:00+02:00 and 02:00+01:00 are distinct slots (PEP 495 fold)."""
+    d = date(2026, 10, 25)
+    starts = [s for s, _ in hourly_slots(d, 1)]
+    attrs = {"prices_tomorrow": [
+        {"time": s.astimezone(TZ).isoformat(), "price": 100.0 + i} for i, s in enumerate(starts)
+    ]}
+    pts = parse_points(attrs, "PLN/MWh")
+    assert len(pts) == 25
+    cfg = TariffConfig.defaults("G13")
+    series = build_series(cfg, pts, d)
+    assert len(series) == 25
+    assert [p.exchange for p in series] == pytest.approx([(100.0 + i) / 1000 for i in range(25)])
+    second_two = datetime(2026, 10, 25, 2, 30, tzinfo=TZ, fold=1)
+    assert slot_at(series, second_two).exchange == pytest.approx(0.103)

@@ -23,7 +23,7 @@ from . import tariffs as T
 from .const import DOMAIN
 from .coordinator import TariffCoordinator
 from .indicators import LEVELS
-from .pricing import MODE_DYNAMIC, TZ, PricedSlot, daily_fixed, slot_at
+from .pricing import MODE_DYNAMIC, TZ, PricedSlot, daily_fixed, iso_local, slot_at
 
 UNIT = "PLN/kWh"  # kod waluty ISO 4217 (wymóg HA dla monetary i panelu Energia)
 LIST_ATTRS = frozenset({"prices", "prices_today", "prices_tomorrow"})
@@ -119,7 +119,7 @@ class PriceSensor(TariffEntity, SensorEntity):
 
         def series(day):
             return [
-                {"time": s.start.isoformat(), "price": getattr(s, self._field)}
+                {"time": iso_local(s.start), "price": getattr(s, self._field)}
                 for s in self.series if s.start.astimezone(TZ).date() == day
             ]
 
@@ -159,7 +159,7 @@ class NextPriceSensor(TariffEntity, SensorEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         s = self.current()
         n = slot_at(self.series, s.end) if s else None
-        return {"start": n.start.isoformat(), "zone": n.zone} if n else {}
+        return {"start": iso_local(n.start), "zone": n.zone} if n else {}
 
 
 class ZoneSensor(TariffEntity, SensorEntity):
@@ -255,7 +255,7 @@ class FixedCostTodaySensor(TariffEntity, SensorEntity):
 
 
 def _iso(d):
-    return d.isoformat() if d else None
+    return iso_local(d) if d else None
 
 
 class IndicatorEntity(TariffEntity, SensorEntity):

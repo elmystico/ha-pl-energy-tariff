@@ -200,7 +200,7 @@ class TariffCoordinator(DataUpdateCoordinator[TariffData]):
         hist: dict[datetime, float] = {}
         for st in states.get(entity_id, []):
             try:
-                hist[st.last_changed.astimezone(TZ)] = float(st.state)
+                hist[st.last_changed] = float(st.state)
             except (TypeError, ValueError):
                 continue
         self._history = hist

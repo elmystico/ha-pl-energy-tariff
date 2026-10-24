@@ -117,14 +117,24 @@ def price_slot(cfg: TariffConfig, start: datetime, end: datetime, exchange: floa
     )
 
 
+def iso_local(d: datetime) -> str:
+    """ISO 8601 in local time (+02:00 / +01:00) for attributes and service responses."""
+    return d.astimezone(TZ).isoformat()
+
+
+# Slot boundaries are kept in UTC. Two aware datetimes sharing one tzinfo compare
+# and hash by wall time, ignoring ``fold`` (PEP 495): on the 25 h day 02:00+02:00
+# and 02:00+01:00 would collide. Local time is used only for zones and display.
+
+
 def hourly_slots(first_day: date, days: int) -> list[tuple[datetime, datetime]]:
-    """Consecutive hours in local time, DST-aware (23/24/25 h days)."""
+    """Consecutive hours (UTC boundaries), DST-aware (23/24/25 h days)."""
     start = datetime.combine(first_day, time(0), TZ).astimezone(timezone.utc)
     end = datetime.combine(first_day + timedelta(days=days), time(0), TZ).astimezone(timezone.utc)
     out = []
     t = start
     while t < end:
-        out.append((t.astimezone(TZ), (t + timedelta(hours=1)).astimezone(TZ)))
+        out.append((t, t + timedelta(hours=1)))
         t += timedelta(hours=1)
     return out
 

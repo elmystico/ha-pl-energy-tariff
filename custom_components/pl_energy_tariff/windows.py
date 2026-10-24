@@ -8,6 +8,8 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Iterable
 
+from .pricing import iso_local
+
 MODE_CHEAPEST = "cheapest"
 MODE_EXPENSIVE = "most_expensive"
 
@@ -43,12 +45,12 @@ class Window:
 
     def as_dict(self) -> dict:
         return {
-            "start": self.start.isoformat(),
-            "end": self.end.isoformat(),
+            "start": iso_local(self.start),
+            "end": iso_local(self.end),
             "average": round(self.average, 5),
             "contiguous": self.contiguous,
-            "ranges": [{"start": s.isoformat(), "end": e.isoformat()} for s, e in self.ranges],
-            "slots": [{"start": p.start.isoformat(), "price": p.price} for p in self.points],
+            "ranges": [{"start": iso_local(s), "end": iso_local(e)} for s, e in self.ranges],
+            "slots": [{"start": iso_local(p.start), "price": p.price} for p in self.points],
         }
 
 

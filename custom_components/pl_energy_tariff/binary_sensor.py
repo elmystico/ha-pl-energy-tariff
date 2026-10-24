@@ -9,6 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .coordinator import TariffCoordinator
+from .pricing import iso_local
 from .sensor import TariffEntity
 
 
@@ -42,4 +43,4 @@ class LevelBinarySensor(TariffEntity, BinarySensorEntity):
         if not w:
             return {}
         return {"cheap_max": w.cheap_max, "expensive_min": w.expensive_min,
-                "window_end": w.end.isoformat()}
+                "window_end": iso_local(w.end)}

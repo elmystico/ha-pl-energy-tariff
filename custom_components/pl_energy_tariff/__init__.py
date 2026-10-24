@@ -26,7 +26,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, SERVICE_FIND_WINDOW
 from .coordinator import TariffCoordinator
-from .pricing import TZ
+from .pricing import TZ, iso_local
 from .windows import MODE_CHEAPEST, MODE_EXPENSIVE, PricePoint, find_window
 
 PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR]
@@ -138,14 +138,14 @@ def _register_services(hass: HomeAssistant) -> None:
                 "found": False,
                 "reason": "not enough price data in the requested range"
                 if points else "no prices in the requested range",
-                "available_from": points[0].start.isoformat() if points else None,
-                "available_to": points[-1].end.isoformat() if points else None,
+                "available_from": iso_local(points[0].start) if points else None,
+                "available_to": iso_local(points[-1].end) if points else None,
             }
         prices = [p.price for p in w.points]
         return {
             "found": True,
-            "start": w.start.isoformat(),
-            "end": w.end.isoformat(),
+            "start": iso_local(w.start),
+            "end": iso_local(w.end),
             "hours": round(sum((p.end - p.start).total_seconds() for p in w.points) / 3600, 2),
             "average": round(w.average, 5),
             "min": round(min(prices), 5),
@@ -153,8 +153,8 @@ def _register_services(hass: HomeAssistant) -> None:
             "unit": "PLN/kWh",
             "price": field,
             "contiguous": w.contiguous,
-            "ranges": [{"start": s.isoformat(), "end": e.isoformat()} for s, e in w.ranges],
-            "slots": [{"start": p.start.isoformat(), "price": p.price} for p in w.points],
+            "ranges": [{"start": iso_local(s), "end": iso_local(e)} for s, e in w.ranges],
+            "slots": [{"start": iso_local(p.start), "price": p.price} for p in w.points],
         }
 
     if not hass.services.has_service(DOMAIN, SERVICE_FIND_WINDOW):

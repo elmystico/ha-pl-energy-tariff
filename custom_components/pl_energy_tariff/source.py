@@ -7,7 +7,7 @@ or a single list under "prices". Item keys are matched loosely (time/start/…, 
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Iterable
 
 from .pricing import TZ, SourcePoint
@@ -42,7 +42,7 @@ def _parse_time(v: Any) -> datetime | None:
         return None
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=TZ)
-    return dt.astimezone(TZ)
+    return dt.astimezone(timezone.utc)  # UTC: see pricing.hourly_slots
 
 
 def _first(d: dict, keys: Iterable[str]) -> Any:
